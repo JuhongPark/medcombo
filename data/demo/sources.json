@@ -1,0 +1,37 @@
+{
+  "data_version": "demo-2026-05-01",
+  "sources": [
+    {
+      "source_id": "src_rxnorm",
+      "title": "RxNorm",
+      "publisher": "U.S. National Library of Medicine",
+      "url": "https://www.nlm.nih.gov/research/umls/rxnorm/",
+      "retrieved_or_version_date": "2026-05-01",
+      "source_type": "drug_normalization_reference"
+    },
+    {
+      "source_id": "src_rxclass",
+      "title": "RxClass API",
+      "publisher": "U.S. National Library of Medicine",
+      "url": "https://lhncbc.nlm.nih.gov/RxNav/APIs/RxClassAPIs.html",
+      "retrieved_or_version_date": "2026-05-01",
+      "source_type": "drug_class_reference"
+    },
+    {
+      "source_id": "src_dailymed",
+      "title": "DailyMed",
+      "publisher": "U.S. National Library of Medicine",
+      "url": "https://dailymed.nlm.nih.gov/dailymed/",
+      "retrieved_or_version_date": "2026-05-01",
+      "source_type": "drug_label_reference"
+    },
+    {
+      "source_id": "src_demo_curated",
+      "title": "MedCombo Curated Demo Knowledge Base",
+      "publisher": "MedCombo",
+      "url": "data/demo",
+      "retrieved_or_version_date": "2026-05-01",
+      "source_type": "prototype_dataset"
+    }
+  ]
+}
