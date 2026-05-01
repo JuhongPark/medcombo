@@ -110,6 +110,9 @@ MedCombo should follow these principles:
 The first MVP should include:
 
 - Manual medication list entry.
+- Required medication or product entry.
+- Optional supplement, demographic, body information, condition, and symptom
+  fields with explicit no-information choices.
 - Basic medication name normalization.
 - Active ingredient lookup from a curated dataset.
 - Duplicate active ingredient detection.
@@ -120,6 +123,7 @@ The first MVP should include:
 - Pharmacist or clinician question generation.
 - A shareable medication review summary.
 - Clear safety boundary language.
+- Sensitive data notice for development-environment use.
 
 The MVP should avoid broad clinical claims. It should demonstrate the end-to-end
 workflow with a small, well-tested medication set.

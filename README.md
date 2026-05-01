@@ -176,6 +176,15 @@ development plan.
 
 The current MVP is dependency-free and uses the Python standard library.
 
+The form requires at least one medication or product name. It also accepts
+supplements, demographic information, body information, chronic conditions, and
+current symptoms. Each non-medication section can be marked as no information
+when the user does not have or does not want to provide that context.
+
+Sensitive personal information requires separate privacy, security, consent,
+retention, and compliance handling before real deployment. In this development
+environment, all entered data is used for development and demo processing.
+
 Run tests:
 
 ```bash
@@ -213,6 +222,8 @@ The first implementation includes:
 - Core data models in `medcombo/models.py`.
 - Medication normalization in `medcombo/normalize.py`.
 - Traceable review rules in `medcombo/rules.py`.
+- Additional intake fields for supplements, demographics, body information,
+  chronic conditions, and current symptoms.
 - Consumer summary generation in `medcombo/summary.py`.
 - Safety-language checks in `medcombo/safety_language.py`.
 - A dependency-free web demo in `app/web_app.py`.

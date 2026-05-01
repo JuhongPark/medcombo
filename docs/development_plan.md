@@ -28,6 +28,10 @@ wide medication coverage too early.
 Supported in MVP:
 
 - Typed medication list entry.
+- Supplement list entry.
+- Demographic, body information, chronic condition, and symptom context entry.
+- Required medication input validation.
+- Explicit no-information selection for non-medication context.
 - Normalized medication candidates.
 - Active ingredient display.
 - Duplicate ingredient signals.
@@ -37,6 +41,7 @@ Supported in MVP:
 - Pharmacist or clinician question generation.
 - Shareable review summary.
 - Source and rule identifiers.
+- Sensitive data development-use notice.
 
 Not supported in MVP:
 
@@ -49,6 +54,19 @@ Not supported in MVP:
 - EHR integration.
 - Storage of identifiable health information without a privacy and security
   implementation.
+- Personalized clinical risk scoring from demographic, body, condition, or
+  symptom context.
+
+## Sensitive Data Notice
+
+The MVP can accept sensitive consumer health context, including supplements,
+demographics, body information, chronic conditions, and symptoms. Sensitive
+personal information requires separate privacy, security, consent, retention,
+and compliance handling before real deployment.
+
+In this development environment, all entered data is used for development and
+demo processing. The MVP should display this notice in the interface and include
+it in generated review summaries.
 
 ## Recommended Repository Structure
 
