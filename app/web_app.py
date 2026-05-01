@@ -8,11 +8,19 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs
 
-from medcombo.rules import review_medication_list
+from medcombo.disclaimers import PRODUCT_STATUS_NOTICE, SENSITIVE_DATA_NOTICE
+from medcombo.rules import review_consumer_intake
 from medcombo.summary import build_consumer_summary
 
 
 DEFAULT_MEDICATIONS = "Tylenol\nNyQuil\nZoloft"
+NO_INFORMATION_LABELS = {
+    "supplements": "No supplement information",
+    "demographics": "No demographic information",
+    "body_info": "No body information",
+    "conditions": "No chronic condition or history information",
+    "symptoms": "No current symptom information",
+}
 
 
 class MedComboHandler(BaseHTTPRequestHandler):
@@ -22,20 +30,73 @@ class MedComboHandler(BaseHTTPRequestHandler):
         if self.path == "/health":
             self._send_text("ok\n")
             return
-        self._send_html(render_page(DEFAULT_MEDICATIONS, None))
+        self._send_html(
+            render_page(
+                medications_text=DEFAULT_MEDICATIONS,
+                supplements_text="",
+                demographics_text="",
+                body_info_text="",
+                conditions_text="",
+                symptoms_text="",
+                no_information=(),
+                error_message="",
+                result=None,
+            )
+        )
 
     def do_POST(self) -> None:
         length = int(self.headers.get("Content-Length", "0"))
         body = self.rfile.read(length).decode("utf-8")
         form = parse_qs(body)
-        medications_text = "\n".join(form.get("medications", [""]))
+        medications_text = _form_value(form, "medications")
+        supplements_text = _form_value(form, "supplements")
+        demographics_text = _form_value(form, "demographics")
+        body_info_text = _form_value(form, "body_info")
+        conditions_text = _form_value(form, "conditions")
+        symptoms_text = _form_value(form, "symptoms")
+        no_information = _no_information_values(form)
+        if "supplements" in no_information:
+            supplements_text = ""
+        if "demographics" in no_information:
+            demographics_text = ""
+        if "body_info" in no_information:
+            body_info_text = ""
+        if "conditions" in no_information:
+            conditions_text = ""
+        if "symptoms" in no_information:
+            symptoms_text = ""
         medication_lines = [
             line.strip()
             for line in medications_text.splitlines()
             if line.strip()
         ]
-        result = review_medication_list(medication_lines) if medication_lines else None
-        self._send_html(render_page(medications_text, result))
+        error_message = ""
+        result = None
+        if medication_lines:
+            result = review_consumer_intake(
+                medication_lines,
+                supplements=supplements_text,
+                demographics=demographics_text,
+                body_info=body_info_text,
+                conditions=conditions_text,
+                symptoms=symptoms_text,
+                no_information=no_information,
+            )
+        else:
+            error_message = "Medication information is required. Enter at least one prescription, OTC product, or medication name."
+        self._send_html(
+            render_page(
+                medications_text=medications_text,
+                supplements_text=supplements_text,
+                demographics_text=demographics_text,
+                body_info_text=body_info_text,
+                conditions_text=conditions_text,
+                symptoms_text=symptoms_text,
+                no_information=no_information,
+                error_message=error_message,
+                result=result,
+            )
+        )
 
     def log_message(self, format: str, *args: object) -> None:
         return
@@ -57,9 +118,41 @@ class MedComboHandler(BaseHTTPRequestHandler):
         self.wfile.write(encoded)
 
 
-def render_page(medications_text: str, result) -> str:
-    escaped_text = html.escape(medications_text)
-    result_html = render_result(result) if result else render_empty_state()
+def _form_value(form: dict[str, list[str]], key: str) -> str:
+    return "\n".join(form.get(key, [""]))
+
+
+def _no_information_values(form: dict[str, list[str]]) -> tuple[str, ...]:
+    values = []
+    for key in NO_INFORMATION_LABELS:
+        if f"no_{key}" in form:
+            values.append(key)
+    return tuple(values)
+
+
+def render_page(
+    medications_text: str,
+    supplements_text: str,
+    demographics_text: str,
+    body_info_text: str,
+    conditions_text: str,
+    symptoms_text: str,
+    no_information: tuple[str, ...],
+    error_message: str,
+    result,
+) -> str:
+    escaped_medications = html.escape(medications_text)
+    escaped_supplements = html.escape(supplements_text)
+    escaped_demographics = html.escape(demographics_text)
+    escaped_body_info = html.escape(body_info_text)
+    escaped_conditions = html.escape(conditions_text)
+    escaped_symptoms = html.escape(symptoms_text)
+    result_html = render_result(result) if result else render_empty_state(error_message)
+    no_supplements_checked = checked_attr("supplements", no_information)
+    no_demographics_checked = checked_attr("demographics", no_information)
+    no_body_info_checked = checked_attr("body_info", no_information)
+    no_conditions_checked = checked_attr("conditions", no_information)
+    no_symptoms_checked = checked_attr("symptoms", no_information)
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -119,7 +212,7 @@ def render_page(medications_text: str, result) -> str:
     }}
     .grid {{
       display: grid;
-      grid-template-columns: minmax(280px, 390px) 1fr;
+      grid-template-columns: minmax(300px, 430px) 1fr;
       gap: 20px;
       align-items: start;
     }}
@@ -135,9 +228,8 @@ def render_page(medications_text: str, result) -> str:
       font-weight: 700;
       font-size: 15px;
     }}
-    textarea {{
+    textarea, input {{
       width: 100%;
-      min-height: 220px;
       resize: vertical;
       border: 1px solid #c9d0da;
       border-radius: 6px;
@@ -145,6 +237,46 @@ def render_page(medications_text: str, result) -> str:
       font: 15px/1.45 Arial, Helvetica, sans-serif;
       color: var(--text);
       background: #fff;
+    }}
+    textarea {{
+      min-height: 108px;
+    }}
+    .medications-input {{
+      min-height: 170px;
+    }}
+    .form-section {{
+      margin-bottom: 16px;
+    }}
+    .form-section:last-of-type {{
+      margin-bottom: 0;
+    }}
+    .required {{
+      color: var(--warn);
+      font-size: 13px;
+      font-weight: 700;
+      margin-left: 4px;
+    }}
+    .checkbox-row {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }}
+    .checkbox-row input {{
+      width: 16px;
+      height: 16px;
+      padding: 0;
+      flex: 0 0 auto;
+    }}
+    .error {{
+      border-left: 4px solid #b42318;
+      background: #fff1f0;
+      color: #5b130f;
+      padding: 10px 12px;
+      font-size: 13px;
+      margin-bottom: 14px;
     }}
     button {{
       width: 100%;
@@ -163,6 +295,14 @@ def render_page(medications_text: str, result) -> str:
       margin-top: 12px;
       color: var(--muted);
       font-size: 13px;
+    }}
+    .notice {{
+      border-left: 4px solid var(--warn);
+      background: #fff8e8;
+      padding: 10px 12px;
+      color: #3a2a00;
+      font-size: 13px;
+      margin-bottom: 14px;
     }}
     .section h2 {{
       margin: 0 0 14px;
@@ -234,14 +374,43 @@ def render_page(medications_text: str, result) -> str:
   <header>
     <div class="wrap topbar">
       <h1>MedCombo</h1>
-      <div class="status">Consumer-first healthcare AI system in development. Not clinically validated or FDA-cleared for real-world medication decisions.</div>
+      <div class="status">Consumer-first healthcare AI system. {html.escape(PRODUCT_STATUS_NOTICE)}</div>
     </div>
   </header>
   <main class="wrap">
     <div class="grid">
       <form method="post">
-        <label for="medications">Medication list</label>
-        <textarea id="medications" name="medications" spellcheck="false">{escaped_text}</textarea>
+        {render_error(error_message)}
+        <div class="notice">{html.escape(SENSITIVE_DATA_NOTICE)}</div>
+        <div class="form-section">
+          <label for="medications">Medication list<span class="required">required</span></label>
+          <textarea class="medications-input" id="medications" name="medications" spellcheck="false" required placeholder="One prescription or OTC medicine per line">{escaped_medications}</textarea>
+        </div>
+        <div class="form-section">
+          <label for="supplements">Supplements</label>
+          <textarea id="supplements" name="supplements" spellcheck="false" placeholder="Vitamin D&#10;Fish oil&#10;Magnesium">{escaped_supplements}</textarea>
+          <label class="checkbox-row"><input type="checkbox" name="no_supplements" value="1"{no_supplements_checked}> No supplement information</label>
+        </div>
+        <div class="form-section">
+          <label for="demographics">Demographic information</label>
+          <textarea id="demographics" name="demographics" spellcheck="false" placeholder="Age range, sex, pregnancy status, or other context the user chooses to provide">{escaped_demographics}</textarea>
+          <label class="checkbox-row"><input type="checkbox" name="no_demographics" value="1"{no_demographics_checked}> No demographic information</label>
+        </div>
+        <div class="form-section">
+          <label for="body_info">Body information</label>
+          <textarea id="body_info" name="body_info" spellcheck="false" placeholder="Height, weight, kidney or liver notes, blood pressure context, or other relevant body information">{escaped_body_info}</textarea>
+          <label class="checkbox-row"><input type="checkbox" name="no_body_info" value="1"{no_body_info_checked}> No body information</label>
+        </div>
+        <div class="form-section">
+          <label for="conditions">Chronic conditions or history</label>
+          <textarea id="conditions" name="conditions" spellcheck="false" placeholder="One condition or history item per line">{escaped_conditions}</textarea>
+          <label class="checkbox-row"><input type="checkbox" name="no_conditions" value="1"{no_conditions_checked}> No chronic condition or history information</label>
+        </div>
+        <div class="form-section">
+          <label for="symptoms">Current symptoms</label>
+          <textarea id="symptoms" name="symptoms" spellcheck="false" placeholder="One symptom or concern per line">{escaped_symptoms}</textarea>
+          <label class="checkbox-row"><input type="checkbox" name="no_symptoms" value="1"{no_symptoms_checked}> No current symptom information</label>
+        </div>
         <button type="submit">Review list</button>
         <div class="fineprint">Use pharmacist or clinician review before medication changes.</div>
       </form>
@@ -254,13 +423,28 @@ def render_page(medications_text: str, result) -> str:
 </html>"""
 
 
-def render_empty_state() -> str:
+def checked_attr(key: str, no_information: tuple[str, ...]) -> str:
+    return " checked" if key in no_information else ""
+
+
+def render_error(error_message: str) -> str:
+    if not error_message:
+        return ""
+    return f"""<div class="error">{html.escape(error_message)}</div>"""
+
+
+def render_empty_state(error_message: str = "") -> str:
+    detail = (
+        html.escape(error_message)
+        if error_message
+        else "Enter at least one medication. Optional health details can be entered or marked as no information."
+    )
     return """
     <section class="section">
       <h2>Review</h2>
       <div class="item">
         <div class="item-title">Ready</div>
-        <div class="meta">Enter one medication or product per line.</div>
+        <div class="meta">""" + detail + """</div>
       </div>
     </section>
     """
@@ -268,6 +452,13 @@ def render_empty_state() -> str:
 
 def render_result(result) -> str:
     medications = "".join(render_medication(medication) for medication in result.medications)
+    if not medications:
+        medications = """
+        <div class="item">
+          <div class="item-title">No medications entered</div>
+          <div class="meta">The current review includes only additional health context.</div>
+        </div>
+        """
     signals = "".join(render_signal(signal) for signal in result.signals)
     if not signals:
         signals = """
@@ -277,11 +468,16 @@ def render_result(result) -> str:
         </div>
         """
     summary = html.escape(build_consumer_summary(result))
+    context = render_context(result.context)
     sources = "".join(render_source(source) for source in result.sources)
     return f"""
     <section class="section">
       <h2>Normalized medications</h2>
       <div class="med-list">{medications}</div>
+    </section>
+    <section class="section">
+      <h2>Additional health context</h2>
+      <div class="med-list">{context}</div>
     </section>
     <section class="section">
       <h2>Review-worthy signals</h2>
@@ -296,6 +492,46 @@ def render_result(result) -> str:
       <div class="source-list">{sources}</div>
     </section>
     """
+
+
+def render_context(context) -> str:
+    items = []
+    if context.supplements:
+        items.append(("Supplements", ", ".join(context.supplements)))
+    elif "supplements" in context.no_information:
+        items.append(("Supplements", "User selected no supplement information"))
+    if context.demographics:
+        items.append(("Demographics", context.demographics))
+    elif "demographics" in context.no_information:
+        items.append(("Demographics", "User selected no demographic information"))
+    if context.body_info:
+        items.append(("Body information", context.body_info))
+    elif "body_info" in context.no_information:
+        items.append(("Body information", "User selected no body information"))
+    if context.conditions:
+        items.append(("Chronic conditions or history", ", ".join(context.conditions)))
+    elif "conditions" in context.no_information:
+        items.append(("Chronic conditions or history", "User selected no condition or history information"))
+    if context.symptoms:
+        items.append(("Current symptoms", ", ".join(context.symptoms)))
+    elif "symptoms" in context.no_information:
+        items.append(("Current symptoms", "User selected no symptom information"))
+    if not items:
+        return """
+        <div class="item">
+          <div class="item-title">No additional context entered</div>
+          <div class="meta">The current review only uses the medication list.</div>
+        </div>
+        """
+    return "".join(
+        f"""
+        <div class="item">
+          <div class="item-title">{html.escape(title)}</div>
+          <div class="meta">{html.escape(value)}</div>
+        </div>
+        """
+        for title, value in items
+    )
 
 
 def render_medication(medication) -> str:
