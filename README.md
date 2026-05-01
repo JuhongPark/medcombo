@@ -172,8 +172,57 @@ Near-term development should proceed in this order:
 See [docs/development_plan.md](docs/development_plan.md) for the working
 development plan.
 
+## Run The MVP
+
+The current MVP is dependency-free and uses the Python standard library.
+
+Run tests:
+
+```bash
+python -m unittest discover
+```
+
+Start the local web demo:
+
+```bash
+python -m app.web_app --port 8010
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8010
+```
+
+The demo starts with this sample list:
+
+```text
+Tylenol
+NyQuil
+Zoloft
+```
+
+That sample is intended to exercise duplicate-ingredient, interaction, and
+therapeutic-overlap review signals against the curated demo knowledge base.
+
+## Current Implementation
+
+The first implementation includes:
+
+- A curated demo knowledge base in `data/demo/`.
+- Core data models in `medcombo/models.py`.
+- Medication normalization in `medcombo/normalize.py`.
+- Traceable review rules in `medcombo/rules.py`.
+- Consumer summary generation in `medcombo/summary.py`.
+- Safety-language checks in `medcombo/safety_language.py`.
+- A dependency-free web demo in `app/web_app.py`.
+- Unit tests in `tests/`.
+
+The demo data is not a clinical-grade medication knowledge base. It exists to
+make the review workflow testable while the system architecture is developed.
+
 ## Current Status
 
-MedCombo is in the product-definition and early system-design stage. The next
-engineering milestone is a minimal consumer-facing medication review workflow
-backed by a curated, testable knowledge base and a traceable safety-rule engine.
+MedCombo is in the early MVP implementation stage. The current system can run a
+minimal consumer-facing medication review workflow backed by a curated, testable
+knowledge base and a traceable safety-rule engine.
