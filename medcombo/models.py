@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Any
 
 
@@ -12,6 +12,29 @@ class MedicationInput:
     input_source: str = "manual"
     user_notes: str = ""
     created_at: str = ""
+
+
+@dataclass(frozen=True)
+class ConsumerHealthContext:
+    supplements: tuple[str, ...] = ()
+    demographics: str = ""
+    body_info: str = ""
+    conditions: tuple[str, ...] = ()
+    symptoms: tuple[str, ...] = ()
+    no_information: tuple[str, ...] = ()
+
+    @property
+    def has_any_data(self) -> bool:
+        return any(
+            (
+                self.supplements,
+                self.demographics,
+                self.body_info,
+                self.conditions,
+                self.symptoms,
+                self.no_information,
+            )
+        )
 
 
 @dataclass(frozen=True)
@@ -92,6 +115,7 @@ class ReviewResult:
     medications: tuple[NormalizedMedication, ...]
     signals: tuple[SafetySignal, ...]
     sources: tuple[SourceReference, ...]
+    context: ConsumerHealthContext = field(default_factory=ConsumerHealthContext)
 
 
 def to_plain_dict(value: Any) -> Any:

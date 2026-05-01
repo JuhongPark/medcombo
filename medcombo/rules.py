@@ -15,7 +15,7 @@ from medcombo.explain import (
     unknown_product_question,
 )
 from medcombo.knowledge import KnowledgeBase
-from medcombo.models import NormalizedMedication, ReviewResult, SafetySignal
+from medcombo.models import ConsumerHealthContext, NormalizedMedication, ReviewResult, SafetySignal
 from medcombo.normalize import normalize_medication_list
 from medcombo.safety_language import require_consumer_safe_text
 from medcombo.text import stable_id_part
@@ -34,8 +34,34 @@ def review_medication_list(
     raw_inputs: list[str] | tuple[str, ...],
     kb: KnowledgeBase | None = None,
 ) -> ReviewResult:
+    return review_consumer_intake(raw_inputs, kb=kb)
+
+
+def review_consumer_intake(
+    raw_inputs: list[str] | tuple[str, ...],
+    supplements: str | list[str] | tuple[str, ...] = (),
+    demographics: str = "",
+    body_info: str = "",
+    conditions: str | list[str] | tuple[str, ...] = (),
+    symptoms: str | list[str] | tuple[str, ...] = (),
+    no_information: str | list[str] | tuple[str, ...] = (),
+    require_medications: bool = True,
+    kb: KnowledgeBase | None = None,
+) -> ReviewResult:
     kb = kb or KnowledgeBase.load_demo()
-    medications = normalize_medication_list(raw_inputs, kb)
+    medication_inputs = _clean_text_lines(raw_inputs)
+    if require_medications and not medication_inputs:
+        raise ValueError("At least one medication or product is required for review.")
+    no_information_values = _clean_text_lines(no_information)
+    context = ConsumerHealthContext(
+        supplements=() if "supplements" in no_information_values else _clean_text_lines(supplements),
+        demographics="" if "demographics" in no_information_values else demographics.strip(),
+        body_info="" if "body_info" in no_information_values else body_info.strip(),
+        conditions=() if "conditions" in no_information_values else _clean_text_lines(conditions),
+        symptoms=() if "symptoms" in no_information_values else _clean_text_lines(symptoms),
+        no_information=no_information_values,
+    )
+    medications = normalize_medication_list(medication_inputs, kb)
     signals = []
     signals.extend(_unresolved_signals(medications, kb))
 
@@ -43,15 +69,27 @@ def review_medication_list(
     signals.extend(_duplicate_ingredient_signals(matched, kb))
     signals.extend(_class_overlap_signals(matched, kb))
     signals.extend(_interaction_signals(matched, kb))
+    signals.extend(_context_signals(context, kb))
 
     ordered_signals = tuple(sorted(signals, key=_signal_sort_key))
     source_ids = _collect_source_ids(medications, ordered_signals)
+    if context.has_any_data:
+        source_ids.add("src_demo_curated")
     return ReviewResult(
         data_version=kb.data_version,
         medications=medications,
         signals=ordered_signals,
         sources=kb.source_list(tuple(sorted(source_ids))),
+        context=context,
     )
+
+
+def _clean_text_lines(values: str | list[str] | tuple[str, ...]) -> tuple[str, ...]:
+    if isinstance(values, str):
+        raw_values = values.splitlines()
+    else:
+        raw_values = values
+    return tuple(value.strip() for value in raw_values if value and value.strip())
 
 
 def _unresolved_signals(
@@ -228,6 +266,66 @@ def _interaction_signals(
     return tuple(signals)
 
 
+def _context_signals(
+    context: ConsumerHealthContext,
+    kb: KnowledgeBase,
+) -> tuple[SafetySignal, ...]:
+    signals = []
+    if context.supplements:
+        supplement_names = _sentence_list(context.supplements)
+        explanation = require_consumer_safe_text(
+            f"MedCombo recorded supplement products for review: {supplement_names}. "
+            "This MVP does not validate supplement-drug interactions yet, so a "
+            "pharmacist or clinician should review them with the medication list."
+        )
+        question = require_consumer_safe_text(
+            "Can you review these supplements with my prescription and "
+            "over-the-counter products for overlap or interaction concerns?"
+        )
+        signals.append(
+            SafetySignal(
+                signal_id="sig_context_supplements",
+                signal_type="supplement_context",
+                review_priority="routine_review",
+                medication_ids=(),
+                ingredient_ids=(),
+                plain_language_explanation=explanation,
+                professional_question=question,
+                source_ids=("src_demo_curated",),
+                rule_id="context.supplements_recorded",
+                data_version=kb.data_version,
+                confidence=1.0,
+            )
+        )
+
+    if context.demographics or context.body_info or context.conditions or context.symptoms:
+        explanation = require_consumer_safe_text(
+            "MedCombo recorded demographic, body, condition, or symptom context "
+            "for review. This MVP includes that context in the review summary but "
+            "does not use it for personalized clinical risk scoring yet."
+        )
+        question = require_consumer_safe_text(
+            "Which of these health details matter for medication safety, and "
+            "should any medication review account for them?"
+        )
+        signals.append(
+            SafetySignal(
+                signal_id="sig_context_health_profile",
+                signal_type="health_context_recorded",
+                review_priority="information",
+                medication_ids=(),
+                ingredient_ids=(),
+                plain_language_explanation=explanation,
+                professional_question=question,
+                source_ids=("src_demo_curated",),
+                rule_id="context.health_profile_recorded",
+                data_version=kb.data_version,
+                confidence=1.0,
+            )
+        )
+    return tuple(signals)
+
+
 def _unique_medications(
     medications: list[NormalizedMedication] | tuple[NormalizedMedication, ...],
 ) -> tuple[NormalizedMedication, ...]:
@@ -251,6 +349,14 @@ def _ordered_unique(values: tuple[str, ...]) -> tuple[str, ...]:
         seen.add(value)
         ordered.append(value)
     return tuple(ordered)
+
+
+def _sentence_list(values: tuple[str, ...]) -> str:
+    if len(values) == 1:
+        return values[0]
+    if len(values) == 2:
+        return f"{values[0]} and {values[1]}"
+    return f"{', '.join(values[:-1])}, and {values[-1]}"
 
 
 def _collect_source_ids(

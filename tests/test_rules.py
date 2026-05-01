@@ -1,6 +1,6 @@
 import unittest
 
-from medcombo.rules import review_medication_list
+from medcombo.rules import review_consumer_intake, review_medication_list
 
 
 class ReviewRulesTest(unittest.TestCase):
@@ -46,6 +46,58 @@ class ReviewRulesTest(unittest.TestCase):
         ]
         self.assertEqual(len(unknown_signals), 1)
         self.assertEqual(unknown_signals[0].review_priority, "unknown")
+
+    def test_supplement_and_health_context_generate_review_items(self):
+        result = review_consumer_intake(
+            ["Tylenol"],
+            supplements="Vitamin D\nFish oil",
+            demographics="Adult",
+            body_info="Weight provided",
+            conditions="high blood pressure",
+            symptoms="cough",
+        )
+
+        signal_types = {signal.signal_type for signal in result.signals}
+        self.assertIn("supplement_context", signal_types)
+        self.assertIn("health_context_recorded", signal_types)
+        self.assertEqual(result.context.supplements, ("Vitamin D", "Fish oil"))
+        self.assertEqual(result.context.conditions, ("high blood pressure",))
+        self.assertEqual(result.context.symptoms, ("cough",))
+
+    def test_medication_is_required_for_consumer_intake(self):
+        with self.assertRaises(ValueError):
+            review_consumer_intake(
+                [],
+                supplements="Vitamin D",
+                no_information=["demographics", "body_info", "conditions", "symptoms"],
+            )
+
+    def test_no_information_selection_clears_optional_context(self):
+        result = review_consumer_intake(
+            ["Tylenol"],
+            supplements="Vitamin D",
+            demographics="Adult",
+            body_info="Weight provided",
+            conditions="high blood pressure",
+            symptoms="cough",
+            no_information=[
+                "supplements",
+                "demographics",
+                "body_info",
+                "conditions",
+                "symptoms",
+            ],
+        )
+
+        self.assertEqual(result.context.supplements, ())
+        self.assertEqual(result.context.demographics, "")
+        self.assertEqual(result.context.body_info, "")
+        self.assertEqual(result.context.conditions, ())
+        self.assertEqual(result.context.symptoms, ())
+        self.assertEqual(
+            result.context.no_information,
+            ("supplements", "demographics", "body_info", "conditions", "symptoms"),
+        )
 
 
 if __name__ == "__main__":
