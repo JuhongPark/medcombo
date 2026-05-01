@@ -2,123 +2,178 @@
 
 ## Overview
 
-MedCombo is an educational medication-combination review and safety-awareness prototype. It explores how software might help users review medication combinations more carefully by surfacing potential medication-safety concerns for further review.
+MedCombo is a consumer-first healthcare AI system for medication-combination
+safety review. It is designed to help people understand their medication lists,
+identify review-worthy medication safety signals, and communicate more
+effectively with pharmacists and clinicians.
 
-The project is intended as an early student prototype, not as a clinical product. Its purpose is to support learning, experimentation, and medication-safety awareness.
+The primary user is the consumer: a person who may not know whether a product
+name is a brand, an active ingredient, a combination drug, an over-the-counter
+medicine, or a supplement. MedCombo should turn that messy real-world input into
+structured, source-linked safety intelligence.
 
-## Course Background
+MedCombo is not positioned as an education-only prototype. It is a healthcare AI
+product concept in pre-market development. It is not yet clinically validated,
+FDA-cleared, or intended to replace professional medical judgment.
 
-MedCombo was started during the topic-selection phase for the MIT 1.001 term project in Engineering Computation and Data Science, taught by Prof. Abel Sanchez and Prof. John R. Williams.
+## Product Thesis
 
-During this phase, several healthcare AI directions were explored, including population-scale drug response analytics, precision medicine, clinical decision support, and pharmacy-related medication safety systems.
+Medication safety problems often begin before a person reaches a clinic or
+pharmacy counter. People may combine prescriptions from multiple clinicians,
+over-the-counter products, cold medicines, supplements, and combination drugs
+without understanding duplicated ingredients, therapeutic overlap, or interaction
+signals.
 
-## Why This Prototype Was Started
+MedCombo starts from the idea that a healthcare AI system can help consumers
+organize medication information, understand safety signals in plain language, and
+prepare better questions for a pharmacist or clinician. The system should support
+safer review behavior without telling users to start, stop, combine, or change
+medications on their own.
 
-Medication use can become difficult to understand when multiple prescriptions, over-the-counter products, supplements, or combination drugs are involved. Even a simple medication list can raise questions about possible drug-drug interactions, duplicated ingredients, overlapping therapeutic classes, or situations where professional review may be needed.
+## Intended Users
 
-MedCombo was started to explore whether a lightweight software prototype could make those questions more visible in an educational setting.
+The first product experience is built for consumers and caregivers.
 
-## Connection to MIT 1.001
+- People taking multiple prescription, over-the-counter, or supplement products.
+- Caregivers helping a family member organize a medication list.
+- Consumers preparing for a pharmacy visit, clinic visit, or medication review.
+- People trying to understand whether two product names contain the same active
+  ingredient.
 
-MIT 1.001 emphasizes computational thinking, data analysis, modeling, and engineering problem solving. MedCombo connects to those themes by framing medication-combination review as a data-driven safety-awareness problem.
+Professional use is an important expansion path, not the starting point. Future
+versions may support pharmacists, clinicians, medication safety teams, and care
+navigation workflows through professional review dashboards, audit trails, and
+EHR or FHIR integrations.
 
-The prototype offers a possible direction for applying computation to healthcare-related information, while also highlighting the limits of automated decision-support tools in medically sensitive contexts.
+## Core Workflow
 
-## Problem Statement
+The intended consumer workflow is:
 
-People may take multiple medications from different sources, including prescriptions, over-the-counter products, and supplements. This can make it difficult to notice duplicated active ingredients, potentially interacting drugs, or medication combinations that deserve review by a doctor, pharmacist, or other licensed medical professional.
+1. Enter medications, supplements, or product names by typing, uploading a photo,
+   scanning a label, or importing a list.
+2. Normalize names against reliable drug data when possible.
+3. Resolve active ingredients, combination products, and therapeutic classes.
+4. Detect review-worthy safety signals such as duplicate active ingredients,
+   possible drug-drug interactions, therapeutic class overlap, allergy-related
+   concerns, or context-sensitive warnings.
+5. Explain each signal in plain language with source references.
+6. Generate questions and a concise summary that the user can bring to a
+   pharmacist or clinician.
 
-The problem explored by MedCombo is how an educational software prototype can organize medication-combination information in a clearer, more safety-aware way without making clinical decisions.
+## Safety Boundary
 
-## Prototype Goals
-
-- Help users enter or review a list of medications.
-- Surface possible drug-drug interactions for further review.
-- Identify duplicated active ingredients when data is available.
-- Flag overlapping therapeutic classes where appropriate.
-- Indicate cases where professional review may be important.
-- Present safety information in a clear and cautious format.
-- Support educational exploration of healthcare data and decision-support design.
-
-## What MedCombo Does Not Do
-
-MedCombo does not:
+MedCombo should not:
 
 - Prescribe medication.
-- Recommend definitive treatment.
-- Diagnose medical conditions.
-- Replace a doctor, pharmacist, or licensed medical professional.
-- Determine whether a medication is safe or unsafe for a specific person.
+- Diagnose a condition.
+- Tell a user to start, stop, combine, or change a medication.
+- Tell a user that a medication regimen is safe.
+- Replace a pharmacist, physician, nurse, or other licensed professional.
 - Provide emergency medical advice.
-- Account for every patient-specific factor, such as age, pregnancy status, allergies, kidney function, liver function, medical history, dosage, timing, genetics, or lab results.
+- Hide uncertainty or source limitations.
 
-## Initial MVP Features
+MedCombo should:
 
-The initial minimum viable prototype may include:
+- Surface review-worthy signals.
+- Explain why a signal appeared.
+- Show sources and data freshness where available.
+- Use cautious, consumer-readable language.
+- Encourage professional review before medication decisions.
+- Escalate urgent warning patterns to appropriate emergency or professional care
+  language.
 
-- Medication list entry.
-- Basic medication name normalization.
-- Active ingredient lookup where source data is available.
-- Drug-drug interaction lookup.
-- Duplicate ingredient detection.
+## Initial AI System Capabilities
+
+The first MVP should prioritize a narrow but serious healthcare AI workflow:
+
+- Consumer medication list intake.
+- Medication name normalization.
+- Active ingredient resolution.
+- Duplicate active ingredient detection.
+- Basic drug-drug interaction signal detection.
 - Therapeutic class overlap detection.
-- Safety flags with severity or review-needed labels.
-- Plain-language explanation fields.
-- Clear prompts to consult a licensed medical professional.
-- A simple web interface or notebook-based workflow for demonstration.
+- Consumer-readable explanation generation.
+- Pharmacist or clinician question generation.
+- Shareable medication review summary.
+- Source, rule, and data-version traceability for every safety signal.
 
-## Safety and Medical Disclaimer
+AI should be used first for intake, structuring, language simplification, and
+explanation. Safety-critical signal generation should rely on deterministic
+rules, validated knowledge sources, and traceable evidence before using
+predictive models.
 
-MedCombo is an educational and decision-support prototype only. It is not a medical device, clinical recommendation system, prescribing tool, diagnostic tool, or substitute for professional medical judgment.
+## Data And Knowledge Strategy
 
-Medication decisions should be made with a doctor, pharmacist, or other licensed medical professional. Users should not start, stop, combine, or change medications based on MedCombo output. For urgent or emergency medical concerns, users should contact emergency services or a qualified medical professional immediately.
+The system should start with public, well-documented sources and a curated
+prototype knowledge base.
 
-Any medication-safety information shown by MedCombo may be incomplete, outdated, incorrect, or not applicable to a specific person.
+- [RxNorm](https://www.nlm.nih.gov/research/umls/rxnorm/) for normalized drug
+  names and identifiers.
+- [RxClass](https://lhncbc.nlm.nih.gov/RxNav/APIs/RxClassAPIs.html) for drug
+  class relationships.
+- [DailyMed](https://dailymed.nlm.nih.gov/dailymed/) for structured product
+  labeling and source-linked drug information.
+- FDA labeling and safety communications where appropriate.
+- Curated interaction and safety-rule datasets created for repeatable
+  development and validation.
 
-## Possible Data Sources
+Public adverse-event datasets can support exploratory analysis, but they should
+not be treated as proof that one medication caused a specific outcome. Real
+clinical-grade interaction coverage may eventually require licensed commercial
+knowledge bases or expert-curated content.
 
-Possible data sources for future exploration include:
+## Architecture Direction
 
-- RxNorm for normalized medication names and identifiers.
-- DailyMed for structured drug labeling information.
-- openFDA for public FDA drug data access.
-- FDA drug labels and safety communications.
-- National Library of Medicine resources.
-- Public drug interaction or adverse-event datasets where licensing permits.
-- Curated educational datasets created specifically for the prototype.
+MedCombo should be designed as a healthcare AI system with a consumer UX:
 
-Any external data source should be reviewed for accuracy, licensing, update frequency, and appropriate use before being used in the prototype.
+- Consumer interface for medication entry and review.
+- AI intake layer for OCR, natural language parsing, and product-name cleanup.
+- Medication normalization service.
+- Knowledge graph or structured knowledge layer for ingredients, classes,
+  interactions, warnings, and source metadata.
+- Safety reasoning layer based on traceable rules and validated knowledge.
+- Explanation layer that translates signals into consumer-readable language.
+- Professional bridge for pharmacist or clinician summaries.
+- Privacy, security, audit, and data-governance layer.
 
-## Technical Direction
+## Regulatory And Privacy Posture
 
-The prototype can begin as a small, transparent application focused on data ingestion, medication normalization, interaction lookup, and safety-aware presentation.
+Because MedCombo handles medication safety and consumer health information, it
+must be developed with regulatory and privacy review from the beginning.
 
-Possible technical components include:
+Relevant U.S. reference points include:
 
-- A Python-based data-processing layer.
-- A lightweight web interface for medication entry and results review.
-- Structured medication records using normalized identifiers.
-- Rule-based checks for duplicate ingredients and class overlaps.
-- Source-linked result explanations.
-- A cautious display model that distinguishes educational signals from clinical conclusions.
+- FDA guidance on
+  [Clinical Decision Support Software](https://www.fda.gov/regulatory-information/search-fda-guidance-documents/clinical-decision-support-software).
+- FDA guidance on
+  [General Wellness: Policy for Low Risk Devices](https://www.fda.gov/regulatory-information/search-fda-guidance-documents/general-wellness-policy-low-risk-devices).
+- The FTC, HHS, and FDA
+  [Mobile Health Apps Interactive Tool](https://www.ftc.gov/business-guidance/resources/mobile-health-apps-interactive-tool).
 
-The technical design should prioritize clarity, traceability, and responsible communication over automation that appears more authoritative than the data supports.
+This repository does not make a final regulatory classification. The intended
+use, claims, risk level, users, outputs, and clinical validation plan must be
+reviewed before any real-world deployment.
 
-## Roadmap
+## Development Roadmap
 
-Planned or possible next steps include:
+Near-term development should proceed in this order:
 
-- Define the initial medication data schema.
-- Select the first public data source for experimentation.
-- Build a medication entry workflow.
-- Implement medication name normalization.
-- Add duplicate active ingredient detection.
-- Add basic interaction lookup.
-- Add result explanations and source references.
-- Create a small demo dataset for repeatable testing.
-- Add tests for safety-rule behavior.
-- Document limitations and known gaps.
+1. Define product requirements and safety boundaries.
+2. Create a small curated medication knowledge base for repeatable testing.
+3. Implement medication intake and normalization.
+4. Implement duplicate ingredient and therapeutic overlap checks.
+5. Add basic interaction signals with source-linked explanations.
+6. Build a consumer-facing review interface.
+7. Generate pharmacist or clinician question summaries.
+8. Add tests for normalization, rules, explanations, and safety language.
+9. Add privacy, audit, and data-version tracking.
+10. Prepare validation and regulatory strategy documentation.
 
-## Status
+See [docs/development_plan.md](docs/development_plan.md) for the working
+development plan.
 
-MedCombo is in the initial prototype and topic-exploration stage. The project is not ready for real-world medical use and should only be treated as an educational software project.
+## Current Status
+
+MedCombo is in the product-definition and early system-design stage. The next
+engineering milestone is a minimal consumer-facing medication review workflow
+backed by a curated, testable knowledge base and a traceable safety-rule engine.
