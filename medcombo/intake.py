@@ -83,8 +83,12 @@ SOURCE_CONFIDENCE = {
     "photo": "needs_visual_verification",
     "caregiver_memory": "memory_entered",
     "memory": "memory_entered",
+    "confirmed_caregiver_memory": "memory_entered",
+    "confirmed_memory": "memory_entered",
     "manual": "unverified_manual",
 }
+
+DETAIL_FIELDS = ("strength", "dose", "route", "frequency", "formulation")
 
 
 def build_medication_intake(
@@ -115,6 +119,60 @@ def generate_conversation_questions(
     if max_questions is None:
         return ordered_questions
     return ordered_questions[:max_questions]
+
+
+def refresh_medication_intake_item(
+    item: MedicationIntakeItem,
+    normalized_medication: NormalizedMedication | None = None,
+    source_type: str | None = None,
+    strength: str | None = None,
+    dose: str | None = None,
+    route: str | None = None,
+    frequency: str | None = None,
+    formulation: str | None = None,
+    last_dose_taken: str | None = None,
+    actual_use_notes: str | None = None,
+) -> MedicationIntakeItem:
+    medication = normalized_medication or item.normalized_medication
+    selected_source_type = source_type or item.source_type
+    details = {
+        "strength": item.strength,
+        "dose": item.dose,
+        "route": item.route,
+        "frequency": item.frequency,
+        "formulation": item.formulation,
+    }
+    overrides = {
+        "strength": strength,
+        "dose": dose,
+        "route": route,
+        "frequency": frequency,
+        "formulation": formulation,
+    }
+    for field_name, value in overrides.items():
+        if value is not None:
+            details[field_name] = value.strip()
+    missing_fields = _missing_fields(medication, details, selected_source_type)
+    review_questions = _professional_review_questions(medication, missing_fields)
+    return MedicationIntakeItem(
+        raw_text=item.raw_text,
+        source_type=selected_source_type,
+        source_confidence=SOURCE_CONFIDENCE.get(selected_source_type, "unverified_manual"),
+        normalized_medication=medication,
+        candidate_medications=medication.candidate_names,
+        selected_medication_id=medication.medication_id,
+        match_status=medication.match_status,
+        verification_status=_verification_status(medication),
+        strength=details["strength"],
+        dose=details["dose"],
+        route=details["route"],
+        frequency=details["frequency"],
+        formulation=details["formulation"],
+        last_dose_taken=last_dose_taken if last_dose_taken is not None else item.last_dose_taken,
+        actual_use_notes=actual_use_notes if actual_use_notes is not None else item.actual_use_notes,
+        missing_fields=missing_fields,
+        professional_review_questions=review_questions,
+    )
 
 
 def _normalize_intake_line(raw_text: str, kb: KnowledgeBase) -> NormalizedMedication:

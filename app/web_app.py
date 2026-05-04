@@ -8,8 +8,8 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs
 
+from medcombo.agent import start_intake_agent_session
 from medcombo.disclaimers import PRODUCT_STATUS_NOTICE, SENSITIVE_DATA_NOTICE
-from medcombo.intake import build_medication_intake, generate_conversation_questions
 from medcombo.rules import review_consumer_intake
 from medcombo.summary import build_consumer_summary
 
@@ -80,8 +80,13 @@ class MedComboHandler(BaseHTTPRequestHandler):
         intake_items = ()
         conversation_questions = ()
         if medication_lines:
-            intake_items = build_medication_intake(medication_lines, source_type=source_type)
-            conversation_questions = generate_conversation_questions(intake_items, max_questions=8)
+            agent_session = start_intake_agent_session(
+                medication_lines,
+                source_type=source_type,
+                max_questions=8,
+            )
+            intake_items = agent_session.intake_items
+            conversation_questions = agent_session.active_questions
             review_lines = [
                 item.normalized_medication.display_name
                 if item.normalized_medication.is_matched

@@ -118,6 +118,29 @@ class ConversationQuestion:
 
 
 @dataclass(frozen=True)
+class AgentTurn:
+    turn_id: str
+    question_id: str
+    item_index: int
+    question_type: str
+    question_text: str
+    user_answer: str
+    extracted_field: str
+    extracted_value: str
+    status: str
+
+
+@dataclass(frozen=True)
+class MedicationAgentSession:
+    session_id: str
+    intake_items: tuple[MedicationIntakeItem, ...]
+    active_questions: tuple[ConversationQuestion, ...]
+    answered_question_ids: tuple[str, ...] = ()
+    turns: tuple[AgentTurn, ...] = ()
+    completed: bool = False
+
+
+@dataclass(frozen=True)
 class SafetySignal:
     signal_id: str
     signal_type: str
