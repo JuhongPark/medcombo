@@ -85,6 +85,39 @@ class NormalizedMedication:
 
 
 @dataclass(frozen=True)
+class MedicationIntakeItem:
+    raw_text: str
+    source_type: str
+    source_confidence: str
+    normalized_medication: NormalizedMedication
+    candidate_medications: tuple[str, ...]
+    selected_medication_id: str | None
+    match_status: str
+    verification_status: str
+    strength: str = ""
+    dose: str = ""
+    route: str = ""
+    frequency: str = ""
+    formulation: str = ""
+    last_dose_taken: str = ""
+    actual_use_notes: str = ""
+    missing_fields: tuple[str, ...] = ()
+    professional_review_questions: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class ConversationQuestion:
+    question_id: str
+    item_index: int
+    raw_text: str
+    question_type: str
+    field_name: str
+    question_text: str
+    rationale: str
+    priority: int
+
+
+@dataclass(frozen=True)
 class SafetySignal:
     signal_id: str
     signal_type: str

@@ -4,11 +4,15 @@ from __future__ import annotations
 
 from medcombo.disclaimers import PRODUCT_STATUS_NOTICE, SENSITIVE_DATA_NOTICE
 from medcombo.explain import names
-from medcombo.models import ReviewResult
+from medcombo.models import ConversationQuestion, MedicationIntakeItem, ReviewResult
 from medcombo.safety_language import require_consumer_safe_text
 
 
-def build_consumer_summary(result: ReviewResult) -> str:
+def build_consumer_summary(
+    result: ReviewResult,
+    intake_items: tuple[MedicationIntakeItem, ...] = (),
+    conversation_questions: tuple[ConversationQuestion, ...] = (),
+) -> str:
     lines = [
         "MedCombo consumer health review summary",
         "",
@@ -29,6 +33,22 @@ def build_consumer_summary(result: ReviewResult) -> str:
             )
         else:
             lines.append(f"- {medication.input_text} -> not matched in the demo dataset")
+
+    if intake_items:
+        lines.extend(["", "Intake quality and missing information:"])
+        for item in intake_items:
+            missing = names(item.missing_fields) if item.missing_fields else "no missing fields flagged"
+            lines.append(
+                f"- {item.raw_text}: {item.verification_status}; source={item.source_confidence}; missing={missing}"
+            )
+            for question in item.professional_review_questions:
+                lines.append(f"  Review question: {question}")
+
+    if conversation_questions:
+        lines.extend(["", "Conversation follow-up prompts:"])
+        for question in conversation_questions:
+            lines.append(f"- {question.question_text}")
+            lines.append(f"  Why this matters: {question.rationale}")
 
     lines.extend(["", "Supplements entered:"])
     if result.context.supplements:
