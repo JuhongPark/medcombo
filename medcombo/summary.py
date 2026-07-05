@@ -12,6 +12,7 @@ def build_consumer_summary(
     result: ReviewResult,
     intake_items: tuple[MedicationIntakeItem, ...] = (),
     conversation_questions: tuple[ConversationQuestion, ...] = (),
+    agent_turns: tuple = (),
 ) -> str:
     lines = [
         "MedCombo consumer health review summary",
@@ -20,29 +21,19 @@ def build_consumer_summary(
         f"Sensitive data notice: {SENSITIVE_DATA_NOTICE}",
         "Use this summary to prepare a conversation with a pharmacist or clinician before medication changes.",
         "",
-        "Medications entered:",
+        "Intake quality and missing information:",
+        "",
+        "Verified medications:",
     ]
 
-    for medication in result.medications:
-        if medication.match_status == "matched":
-            ingredient_names = names(tuple(ingredient.name for ingredient in medication.active_ingredients))
-            lines.append(f"- {medication.input_text} -> {medication.display_name} ({ingredient_names})")
-        elif medication.match_status == "ambiguous":
-            lines.append(
-                f"- {medication.input_text} -> ambiguous match: {names(medication.candidate_names)}"
-            )
-        else:
-            lines.append(f"- {medication.input_text} -> not matched in the demo dataset")
+    lines.extend(_verified_medication_lines(result, intake_items))
+    lines.extend(["", "Uncertain or unresolved medications:"])
+    lines.extend(_uncertain_medication_lines(result, intake_items))
+    lines.extend(["", "Missing intake details:"])
+    lines.extend(_missing_detail_lines(intake_items))
 
-    if intake_items:
-        lines.extend(["", "Intake quality and missing information:"])
-        for item in intake_items:
-            missing = names(item.missing_fields) if item.missing_fields else "no missing fields flagged"
-            lines.append(
-                f"- {item.raw_text}: {item.verification_status}; source={item.source_confidence}; missing={missing}"
-            )
-            for question in item.professional_review_questions:
-                lines.append(f"  Review question: {question}")
+    lines.extend(["", "User answer history:"])
+    lines.extend(_agent_turn_lines(agent_turns))
 
     if conversation_questions:
         lines.extend(["", "Conversation follow-up prompts:"])
@@ -79,6 +70,9 @@ def build_consumer_summary(
             "- No demo-dataset safety signals were generated. This does not mean the medication list has no risk.",
         ])
 
+    lines.extend(["", "Pharmacist or clinician review checklist:"])
+    lines.extend(_professional_checklist_lines(result, intake_items, conversation_questions))
+
     lines.extend([
         "",
         "Source references:",
@@ -88,6 +82,112 @@ def build_consumer_summary(
 
     summary = "\n".join(lines)
     return require_consumer_safe_text(summary)
+
+
+def _verified_medication_lines(
+    result: ReviewResult,
+    intake_items: tuple[MedicationIntakeItem, ...],
+) -> list[str]:
+    lines = []
+    if intake_items:
+        for item in intake_items:
+            medication = item.normalized_medication
+            if not medication.is_matched:
+                continue
+            ingredient_names = names(tuple(ingredient.name for ingredient in medication.active_ingredients))
+            detail_summary = _detail_summary(item)
+            lines.append(
+                f"- {item.raw_text} -> {medication.display_name} ({ingredient_names}); "
+                f"verification={item.verification_status}; source={item.source_confidence}; details={detail_summary}"
+            )
+    else:
+        for medication in result.medications:
+            if medication.match_status != "matched":
+                continue
+            ingredient_names = names(tuple(ingredient.name for ingredient in medication.active_ingredients))
+            lines.append(f"- {medication.input_text} -> {medication.display_name} ({ingredient_names})")
+    return lines or ["- None verified in the demo dataset"]
+
+
+def _uncertain_medication_lines(
+    result: ReviewResult,
+    intake_items: tuple[MedicationIntakeItem, ...],
+) -> list[str]:
+    lines = []
+    if intake_items:
+        for item in intake_items:
+            medication = item.normalized_medication
+            if medication.is_matched:
+                continue
+            if medication.match_status == "ambiguous":
+                candidate_text = names(medication.candidate_names)
+                lines.append(f"- {item.raw_text}: ambiguous match candidates are {candidate_text}")
+            else:
+                lines.append(f"- {item.raw_text}: not matched in the demo dataset")
+    else:
+        for medication in result.medications:
+            if medication.match_status == "ambiguous":
+                lines.append(
+                    f"- {medication.input_text}: ambiguous match candidates are {names(medication.candidate_names)}"
+                )
+            elif medication.match_status == "unknown":
+                lines.append(f"- {medication.input_text}: not matched in the demo dataset")
+    return lines or ["- No uncertain medication identities flagged"]
+
+
+def _missing_detail_lines(intake_items: tuple[MedicationIntakeItem, ...]) -> list[str]:
+    if not intake_items:
+        return ["- No intake detail state was available"]
+    lines = []
+    for item in intake_items:
+        if item.missing_fields:
+            lines.append(f"- {item.raw_text}: missing {names(item.missing_fields)}")
+    return lines or ["- No missing details flagged by the MVP intake rules"]
+
+
+def _agent_turn_lines(agent_turns: tuple) -> list[str]:
+    if not agent_turns:
+        return ["- No follow-up answers recorded in this summary"]
+    lines = []
+    for turn in agent_turns:
+        answer = turn.user_answer or "No answer captured"
+        value = f"; captured={turn.extracted_value}" if turn.extracted_value else ""
+        lines.append(
+            f"- {turn.question_text} Answer: {answer}. Field={turn.extracted_field}; status={turn.status}{value}"
+        )
+    return lines
+
+
+def _professional_checklist_lines(
+    result: ReviewResult,
+    intake_items: tuple[MedicationIntakeItem, ...],
+    conversation_questions: tuple[ConversationQuestion, ...],
+) -> list[str]:
+    checklist = []
+    for item in intake_items:
+        checklist.extend(item.professional_review_questions)
+    for question in conversation_questions:
+        checklist.append(question.question_text)
+    for signal in result.signals:
+        checklist.append(signal.professional_question)
+
+    ordered = []
+    seen = set()
+    for item in checklist:
+        if item in seen:
+            continue
+        seen.add(item)
+        ordered.append(f"- {item}")
+    return ordered or ["- Bring the medication list to a pharmacist or clinician for review if questions remain"]
+
+
+def _detail_summary(item: MedicationIntakeItem) -> str:
+    details = []
+    for field_name in ("strength", "dose", "route", "frequency", "formulation"):
+        value = getattr(item, field_name)
+        if value:
+            details.append(f"{field_name}={value}")
+    return ", ".join(details) if details else "details not fully captured"
 
 
 def _context_summary_lines(result: ReviewResult) -> list[str]:

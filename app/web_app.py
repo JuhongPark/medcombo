@@ -697,6 +697,7 @@ def render_result(
             result,
             intake_items=intake_items,
             conversation_questions=conversation_questions,
+            agent_turns=agent_session.turns if agent_session else (),
         )
     )
     context = render_context(result.context)

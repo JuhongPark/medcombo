@@ -1,5 +1,6 @@
 import unittest
 
+from medcombo.agent import answer_agent_question, start_intake_agent_session
 from medcombo.rules import review_consumer_intake, review_medication_list
 from medcombo.summary import build_consumer_summary
 
@@ -61,6 +62,30 @@ class ExplainTest(unittest.TestCase):
         self.assertIn("Body information: user selected no information", summary)
         self.assertIn("Chronic conditions or history: user selected no information", summary)
         self.assertIn("Current symptoms: user selected no information", summary)
+
+    def test_summary_separates_review_packet_sections(self):
+        session = start_intake_agent_session(["metoprolol"], source_type="manual")
+        updated = answer_agent_question(
+            session,
+            session.active_questions[0].question_id,
+            "succinate",
+        )
+        result = review_medication_list(["Metoprolol Succinate"])
+
+        summary = build_consumer_summary(
+            result,
+            intake_items=updated.intake_items,
+            conversation_questions=updated.active_questions,
+            agent_turns=updated.turns,
+        )
+
+        self.assertIn("Verified medications:", summary)
+        self.assertIn("Uncertain or unresolved medications:", summary)
+        self.assertIn("Missing intake details:", summary)
+        self.assertIn("User answer history:", summary)
+        self.assertIn("Pharmacist or clinician review checklist:", summary)
+        self.assertIn("Answer: succinate", summary)
+        self.assertIn("Metoprolol Succinate", summary)
 
 
 if __name__ == "__main__":
