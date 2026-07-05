@@ -1,0 +1,67 @@
+{
+  "benchmark_id": "normalization-demo-2026-05-01",
+  "data_version": "demo-2026-05-01",
+  "cases": [
+    {
+      "case_id": "exact_brand_tylenol",
+      "raw_text": "Tylenol",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_tylenol"
+    },
+    {
+      "case_id": "label_with_details_tylenol",
+      "raw_text": "Tylenol 500 mg 2 tablets daily",
+      "source_type": "label",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_tylenol",
+      "expected_strength": "500 mg",
+      "expected_dose": "2 tablets",
+      "expected_frequency": "daily"
+    },
+    {
+      "case_id": "ingredient_alias_apap",
+      "raw_text": "APAP",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_adp_acetaminophen"
+    },
+    {
+      "case_id": "combination_otc_nyquil",
+      "raw_text": "nyquil cold flu",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_nyquil"
+    },
+    {
+      "case_id": "ambiguous_metoprolol",
+      "raw_text": "metoprolol",
+      "source_type": "manual",
+      "expected_match_status": "ambiguous",
+      "expected_candidate_ids": [
+        "med_metoprolol_succinate",
+        "med_metoprolol_tartrate"
+      ]
+    },
+    {
+      "case_id": "brand_toprol_xl",
+      "raw_text": "Toprol XL",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_metoprolol_succinate"
+    },
+    {
+      "case_id": "hyphenated_otc_pepto_bismol",
+      "raw_text": "Pepto-Bismol",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_pepto_bismol"
+    },
+    {
+      "case_id": "unknown_memory_product",
+      "raw_text": "Mystery capsule",
+      "source_type": "memory",
+      "expected_match_status": "unknown"
+    }
+  ]
+}
