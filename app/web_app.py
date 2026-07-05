@@ -929,14 +929,30 @@ def render_signal(signal) -> str:
     rule = html.escape(signal.rule_id)
     sources = html.escape(", ".join(signal.source_ids))
     signal_type = html.escape(signal.signal_type.replace("_", " "))
+    evidence = render_signal_evidence(signal)
     return f"""
     <div class="item">
       <div class="item-title"><span>{signal_type}</span><span class="tag {priority}">{priority}</span></div>
       <div>{explanation}</div>
       <div class="question"><strong>Question:</strong> {question}</div>
+      {evidence}
       <div class="meta">Rule/source: {rule} | {sources}</div>
     </div>
     """
+
+
+def render_signal_evidence(signal) -> str:
+    if not (signal.clinical_concern or signal.evidence_summary or signal.patient_specific_modifiers):
+        return ""
+    lines = []
+    if signal.clinical_concern:
+        lines.append(f"""<div class="meta">Evidence concern: {html.escape(signal.clinical_concern)}</div>""")
+    if signal.evidence_summary:
+        lines.append(f"""<div class="meta">Evidence note: {html.escape(signal.evidence_summary)}</div>""")
+    if signal.patient_specific_modifiers:
+        modifiers = html.escape(", ".join(signal.patient_specific_modifiers))
+        lines.append(f"""<div class="meta">Context to review: {modifiers}</div>""")
+    return "".join(lines)
 
 
 def render_source(source) -> str:

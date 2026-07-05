@@ -53,6 +53,17 @@ class DemoDataIntegrityTest(unittest.TestCase):
             self.assert_reference_subset(interaction["ingredient_ids"], ingredient_ids, interaction["interaction_id"])
             self.assert_reference_subset(interaction["source_ids"], source_ids, interaction["interaction_id"])
 
+    def test_interactions_include_evidence_metadata(self):
+        for interaction in self.interaction_data["interactions"]:
+            self.assertEqual(interaction["evidence_type"], "prototype_curated_label_reference")
+            self.assertTrue(interaction["clinical_concern"], interaction["interaction_id"])
+            self.assertTrue(interaction["evidence_summary"], interaction["interaction_id"])
+            self.assertGreaterEqual(
+                len(interaction["patient_specific_modifiers"]),
+                1,
+                interaction["interaction_id"],
+            )
+
     def test_ingredient_and_class_sources_exist(self):
         source_ids = self.ids("source_id", self.source_data["sources"])
 

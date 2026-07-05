@@ -15,6 +15,8 @@ class ExplainTest(unittest.TestCase):
         self.assertIn("src_dailymed", summary)
         self.assertIn("not clinically validated", summary)
         self.assertIn("Sensitive personal information requires separate", summary)
+        self.assertIn("Evidence concern: Bleeding-related review concern", summary)
+        self.assertIn("Context to review:", summary)
 
     def test_every_signal_has_explanation_and_question(self):
         result = review_medication_list(["Tylenol", "NyQuil", "Zoloft"])

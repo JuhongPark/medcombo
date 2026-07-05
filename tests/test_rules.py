@@ -37,6 +37,12 @@ class ReviewRulesTest(unittest.TestCase):
         self.assertEqual(len(interaction_signals), 1)
         self.assertEqual(interaction_signals[0].review_priority, "prompt_review")
         self.assertIn("src_dailymed", interaction_signals[0].source_ids)
+        self.assertEqual(
+            interaction_signals[0].evidence_type,
+            "prototype_curated_label_reference",
+        )
+        self.assertEqual(interaction_signals[0].clinical_concern, "Bleeding-related review concern")
+        self.assertIn("kidney function", interaction_signals[0].patient_specific_modifiers)
 
     def test_unknown_product_generates_review_item(self):
         result = review_medication_list(["Tylenol", "Mystery capsule"])

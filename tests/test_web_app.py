@@ -32,6 +32,32 @@ class WebAppWorkflowTest(unittest.TestCase):
         self.assertIn('name="web_session_id" value="web_test"', rendered)
         self.assertIn(agent_session.active_questions[0].question_id, rendered)
 
+    def test_render_result_includes_interaction_evidence_metadata(self):
+        agent_session = start_intake_agent_session(["Warfarin", "Advil"], source_type="label")
+        state = WebSessionState(
+            agent_session=agent_session,
+            medications_text="Warfarin\nAdvil",
+            supplements_text="",
+            demographics_text="",
+            body_info_text="",
+            conditions_text="",
+            symptoms_text="",
+            no_information=(),
+            source_type="label",
+        )
+        result = review_from_session_state(state)
+
+        rendered = render_result(
+            result,
+            intake_items=agent_session.intake_items,
+            conversation_questions=agent_session.active_questions,
+            agent_session=agent_session,
+            web_session_id="web_test",
+        )
+
+        self.assertIn("Evidence concern: Bleeding-related review concern", rendered)
+        self.assertIn("Context to review:", rendered)
+
     def test_review_from_session_state_uses_updated_agent_identity(self):
         agent_session = start_intake_agent_session(["metoprolol"], source_type="manual")
         updated_session = answer_agent_question(

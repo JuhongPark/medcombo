@@ -153,6 +153,10 @@ class SafetySignal:
     rule_id: str
     data_version: str
     confidence: float
+    evidence_type: str = ""
+    clinical_concern: str = ""
+    evidence_summary: str = ""
+    patient_specific_modifiers: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

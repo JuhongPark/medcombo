@@ -63,6 +63,15 @@ def build_consumer_summary(
             lines.append(f"- [{signal.review_priority}] {signal.plain_language_explanation}")
             lines.append(f"  Question: {signal.professional_question}")
             lines.append(f"  Rule/source: {signal.rule_id} | {', '.join(signal.source_ids)}")
+            if signal.clinical_concern:
+                lines.append(f"  Evidence concern: {signal.clinical_concern}")
+            if signal.evidence_summary:
+                lines.append(f"  Evidence note: {signal.evidence_summary}")
+            if signal.patient_specific_modifiers:
+                lines.append(
+                    "  Context to review: "
+                    f"{names(signal.patient_specific_modifiers)}"
+                )
     else:
         lines.extend([
             "",
