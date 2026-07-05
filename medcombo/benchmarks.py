@@ -88,3 +88,19 @@ def _evaluate_case(case: dict[str, Any], kb: KnowledgeBase) -> dict[str, Any]:
         "candidate_ids": medication.candidate_ids,
         "failures": tuple(failures),
     }
+
+
+def main() -> None:
+    report = run_normalization_benchmark()
+    print(
+        f"{report['benchmark_id']}: "
+        f"{report['pass_count']}/{report['case_count']} cases passed"
+    )
+    for result in report["results"]:
+        if result["failures"]:
+            print(f"- {result['case_id']}: {'; '.join(result['failures'])}")
+    raise SystemExit(1 if report["fail_count"] else 0)
+
+
+if __name__ == "__main__":
+    main()
