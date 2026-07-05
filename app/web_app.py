@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import argparse
 import html
+import uuid
+from dataclasses import dataclass, replace
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs
 
-from medcombo.agent import start_intake_agent_session
+from medcombo.agent import answer_agent_question, start_intake_agent_session
 from medcombo.disclaimers import PRODUCT_STATUS_NOTICE, SENSITIVE_DATA_NOTICE
 from medcombo.rules import review_consumer_intake
 from medcombo.summary import build_consumer_summary
@@ -22,6 +24,20 @@ NO_INFORMATION_LABELS = {
     "conditions": "No chronic condition or history information",
     "symptoms": "No current symptom information",
 }
+SESSION_STORE = {}
+
+
+@dataclass(frozen=True)
+class WebSessionState:
+    agent_session: object
+    medications_text: str
+    supplements_text: str
+    demographics_text: str
+    body_info_text: str
+    conditions_text: str
+    symptoms_text: str
+    no_information: tuple[str, ...]
+    source_type: str
 
 
 class MedComboHandler(BaseHTTPRequestHandler):
@@ -45,6 +61,8 @@ class MedComboHandler(BaseHTTPRequestHandler):
                 result=None,
                 intake_items=(),
                 conversation_questions=(),
+                agent_session=None,
+                web_session_id="",
             )
         )
 
@@ -52,6 +70,28 @@ class MedComboHandler(BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", "0"))
         body = self.rfile.read(length).decode("utf-8")
         form = parse_qs(body)
+        action = _form_value(form, "action") or "review"
+        if action == "reset":
+            self._send_html(
+                render_page(
+                    medications_text=DEFAULT_MEDICATIONS,
+                    supplements_text="",
+                    demographics_text="",
+                    body_info_text="",
+                    conditions_text="",
+                    symptoms_text="",
+                    no_information=(),
+                    source_type="manual",
+                    error_message="",
+                    result=None,
+                    intake_items=(),
+                    conversation_questions=(),
+                    agent_session=None,
+                    web_session_id="",
+                )
+            )
+            return
+
         medications_text = _form_value(form, "medications")
         supplements_text = _form_value(form, "supplements")
         demographics_text = _form_value(form, "demographics")
@@ -79,29 +119,63 @@ class MedComboHandler(BaseHTTPRequestHandler):
         result = None
         intake_items = ()
         conversation_questions = ()
-        if medication_lines:
+        agent_session = None
+        web_session_id = _form_value(form, "web_session_id")
+        if action == "answer_question":
+            state = SESSION_STORE.get(web_session_id)
+            if state is None:
+                error_message = "The development intake session was not found. Run the review again."
+            else:
+                medications_text = state.medications_text
+                supplements_text = state.supplements_text
+                demographics_text = state.demographics_text
+                body_info_text = state.body_info_text
+                conditions_text = state.conditions_text
+                symptoms_text = state.symptoms_text
+                no_information = state.no_information
+                source_type = state.source_type
+                question_id = _form_value(form, "question_id")
+                answer_text = _form_value(form, "answer_text")
+                agent_session = state.agent_session
+                if answer_text.strip():
+                    try:
+                        agent_session = answer_agent_question(
+                            agent_session,
+                            question_id,
+                            answer_text,
+                            max_questions=8,
+                        )
+                    except ValueError as exc:
+                        error_message = str(exc)
+                else:
+                    error_message = "Enter an answer, or type I don't know if you are unsure."
+                state = replace(state, agent_session=agent_session)
+                SESSION_STORE[web_session_id] = state
+                intake_items = agent_session.intake_items
+                conversation_questions = agent_session.active_questions
+                result = review_from_session_state(state)
+        elif medication_lines:
             agent_session = start_intake_agent_session(
                 medication_lines,
                 source_type=source_type,
                 max_questions=8,
             )
+            web_session_id = f"web_{uuid.uuid4().hex[:12]}"
+            state = WebSessionState(
+                agent_session=agent_session,
+                medications_text=medications_text,
+                supplements_text=supplements_text,
+                demographics_text=demographics_text,
+                body_info_text=body_info_text,
+                conditions_text=conditions_text,
+                symptoms_text=symptoms_text,
+                no_information=no_information,
+                source_type=source_type,
+            )
+            SESSION_STORE[web_session_id] = state
             intake_items = agent_session.intake_items
             conversation_questions = agent_session.active_questions
-            review_lines = [
-                item.normalized_medication.display_name
-                if item.normalized_medication.is_matched
-                else item.raw_text
-                for item in intake_items
-            ]
-            result = review_consumer_intake(
-                review_lines,
-                supplements=supplements_text,
-                demographics=demographics_text,
-                body_info=body_info_text,
-                conditions=conditions_text,
-                symptoms=symptoms_text,
-                no_information=no_information,
-            )
+            result = review_from_session_state(state)
         else:
             error_message = "Medication information is required. Enter at least one prescription, OTC product, or medication name."
         self._send_html(
@@ -118,6 +192,8 @@ class MedComboHandler(BaseHTTPRequestHandler):
                 result=result,
                 intake_items=intake_items,
                 conversation_questions=conversation_questions,
+                agent_session=agent_session,
+                web_session_id=web_session_id,
             )
         )
 
@@ -153,6 +229,24 @@ def _no_information_values(form: dict[str, list[str]]) -> tuple[str, ...]:
     return tuple(values)
 
 
+def review_from_session_state(state: WebSessionState):
+    review_lines = [
+        item.normalized_medication.display_name
+        if item.normalized_medication.is_matched
+        else item.raw_text
+        for item in state.agent_session.intake_items
+    ]
+    return review_consumer_intake(
+        review_lines,
+        supplements=state.supplements_text,
+        demographics=state.demographics_text,
+        body_info=state.body_info_text,
+        conditions=state.conditions_text,
+        symptoms=state.symptoms_text,
+        no_information=state.no_information,
+    )
+
+
 def render_page(
     medications_text: str,
     supplements_text: str,
@@ -166,6 +260,8 @@ def render_page(
     result,
     intake_items: tuple = (),
     conversation_questions: tuple = (),
+    agent_session=None,
+    web_session_id: str = "",
 ) -> str:
     escaped_medications = html.escape(medications_text)
     escaped_supplements = html.escape(supplements_text)
@@ -174,7 +270,13 @@ def render_page(
     escaped_conditions = html.escape(conditions_text)
     escaped_symptoms = html.escape(symptoms_text)
     result_html = (
-        render_result(result, intake_items, conversation_questions)
+        render_result(
+            result,
+            intake_items,
+            conversation_questions,
+            agent_session=agent_session,
+            web_session_id=web_session_id,
+        )
         if result
         else render_empty_state(error_message)
     )
@@ -247,7 +349,7 @@ def render_page(
       gap: 20px;
       align-items: start;
     }}
-    form, .section {{
+    .review-form, .section {{
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -322,6 +424,39 @@ def render_page(
       cursor: pointer;
     }}
     button:hover {{ background: var(--accent-strong); }}
+    button.secondary {{
+      background: #e8edf1;
+      color: #26313f;
+    }}
+    button.secondary:hover {{ background: #dbe2e8; }}
+    .answer-form {{
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+    }}
+    .answer-actions {{
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }}
+    .answer-actions button {{
+      width: auto;
+      min-width: 132px;
+      margin-top: 0;
+      padding: 0 16px;
+    }}
+    .turn-list {{
+      display: grid;
+      gap: 8px;
+      margin-bottom: 10px;
+    }}
+    .turn {{
+      padding: 8px 10px;
+      border-left: 3px solid var(--line);
+      background: #f8fafb;
+      font-size: 13px;
+    }}
     .fineprint {{
       margin-top: 12px;
       color: var(--muted);
@@ -432,7 +567,7 @@ def render_page(
   </header>
   <main class="wrap">
     <div class="grid">
-      <form method="post">
+      <form class="review-form" method="post">
         {render_error(error_message)}
         <div class="notice">{html.escape(SENSITIVE_DATA_NOTICE)}</div>
         <div class="form-section">
@@ -468,7 +603,8 @@ def render_page(
           <textarea id="symptoms" name="symptoms" spellcheck="false" placeholder="One symptom or concern per line">{escaped_symptoms}</textarea>
           <label class="checkbox-row"><input type="checkbox" name="no_symptoms" value="1"{no_symptoms_checked}> No current symptom information</label>
         </div>
-        <button type="submit">Review list</button>
+        <button type="submit" name="action" value="review">Review list</button>
+        <button class="secondary" type="submit" name="action" value="reset" formnovalidate>Start over</button>
         <div class="fineprint">Use pharmacist or clinician review before medication changes.</div>
       </form>
       <div class="stack">
@@ -527,7 +663,13 @@ def render_empty_state(error_message: str = "") -> str:
     """
 
 
-def render_result(result, intake_items: tuple = (), conversation_questions: tuple = ()) -> str:
+def render_result(
+    result,
+    intake_items: tuple = (),
+    conversation_questions: tuple = (),
+    agent_session=None,
+    web_session_id: str = "",
+) -> str:
     medications = "".join(render_medication(medication) for medication in result.medications)
     if not medications:
         medications = """
@@ -545,7 +687,11 @@ def render_result(result, intake_items: tuple = (), conversation_questions: tupl
         </div>
         """
     intake_quality = render_intake_quality(intake_items)
-    conversation = render_conversation_questions(conversation_questions)
+    conversation = render_conversation_questions(
+        conversation_questions,
+        agent_session=agent_session,
+        web_session_id=web_session_id,
+    )
     summary = html.escape(
         build_consumer_summary(
             result,
@@ -626,22 +772,72 @@ def render_intake_item(item) -> str:
     """
 
 
-def render_conversation_questions(conversation_questions: tuple) -> str:
+def render_conversation_questions(
+    conversation_questions: tuple,
+    agent_session=None,
+    web_session_id: str = "",
+) -> str:
+    turns = render_agent_turns(agent_session.turns if agent_session else ())
     if not conversation_questions:
         return """
         <div class="item chat-message">
           <div class="speaker">Assistant</div>
           <div>No first-pass clarification questions were generated. Keep the label or pharmacy list available for professional review.</div>
         </div>
-        """
+        """ + turns
     intro = """
     <div class="item chat-message">
       <div class="speaker">Assistant</div>
       <div>I will ask for facts that help prepare a pharmacist or clinician review. Unknown answers can stay marked for review.</div>
     </div>
     """
-    messages = "".join(render_conversation_question(question) for question in conversation_questions)
-    return intro + messages
+    active_form = render_active_question_form(conversation_questions[0], web_session_id)
+    queued_questions = "".join(
+        render_conversation_question(question)
+        for question in conversation_questions[1:]
+    )
+    return turns + intro + active_form + queued_questions
+
+
+def render_agent_turns(turns: tuple) -> str:
+    if not turns:
+        return ""
+    entries = "".join(
+        f"""
+        <div class="turn">
+          <div><strong>Question:</strong> {html.escape(turn.question_text)}</div>
+          <div><strong>Answer:</strong> {html.escape(turn.user_answer or "No answer captured")}</div>
+          <div class="meta">Captured field: {html.escape(turn.extracted_field)} | Status: {html.escape(turn.status)}</div>
+        </div>
+        """
+        for turn in turns
+    )
+    return f"""
+    <div class="item chat-message">
+      <div class="speaker">Conversation history</div>
+      <div class="turn-list">{entries}</div>
+    </div>
+    """
+
+
+def render_active_question_form(question, web_session_id: str) -> str:
+    return f"""
+    <div class="item chat-message">
+      <div class="speaker">Assistant</div>
+      <div>{html.escape(question.question_text)}</div>
+      <div class="meta">{html.escape(question.rationale)}</div>
+      <form class="answer-form" method="post">
+        <input type="hidden" name="action" value="answer_question">
+        <input type="hidden" name="web_session_id" value="{html.escape(web_session_id)}">
+        <input type="hidden" name="question_id" value="{html.escape(question.question_id)}">
+        <label for="answer_text_{html.escape(question.question_id)}">Your answer</label>
+        <div class="answer-actions">
+          <input id="answer_text_{html.escape(question.question_id)}" name="answer_text" autocomplete="off" placeholder="Type an answer or I don't know">
+          <button type="submit">Send answer</button>
+        </div>
+      </form>
+    </div>
+    """
 
 
 def render_conversation_question(question) -> str:
