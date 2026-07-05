@@ -28,6 +28,8 @@ Implemented:
 - Review packet regeneration from the current agent session.
 - Unit tests for core session behavior, scenario coverage, web rendering, and
   demo data integrity.
+- Normalization benchmark fixtures and a local benchmark runner.
+- Prototype evidence metadata for curated interaction rules.
 
 Not implemented yet:
 
@@ -137,6 +139,15 @@ Exit criteria:
 
 ### 5. Source And Evidence Expansion
 
+Status:
+
+- Initial normalization benchmark fixtures are implemented in
+  `data/benchmarks/normalization_cases.json`.
+- The local runner is available with `python -m medcombo.benchmarks`.
+- Curated demo interactions now carry prototype evidence metadata for evidence
+  type, clinical concern, evidence note, and patient-specific context to review.
+- External source comparison and non-demo ingestion are still not implemented.
+
 Goal:
 
 - Prepare for non-demo medication data without losing traceability.
@@ -195,8 +206,9 @@ Exit criteria:
 
 ## Recommended Order
 
-1. Normalization benchmark fixtures.
-2. Source and evidence expansion.
+1. Data-source comparison memo for RxNorm, DailyMed, openFDA extraction,
+   licensed compendia, and expert-curated rules.
+2. Non-demo source ingestion experiment separated from `data/demo`.
 3. LLM-assisted parsing prototype.
 4. Safety and human factors review.
 5. Privacy and operations plan.

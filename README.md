@@ -197,6 +197,12 @@ Run tests:
 python -m unittest discover
 ```
 
+Run the normalization benchmark fixture set:
+
+```bash
+python -m medcombo.benchmarks
+```
+
 Start the local web demo:
 
 ```bash
@@ -230,9 +236,11 @@ The first implementation includes:
 - Core data models in `medcombo/models.py`.
 - Medication normalization in `medcombo/normalize.py`.
 - Traceable review rules in `medcombo/rules.py`.
+- Prototype interaction evidence metadata for curated demo rules.
 - Additional intake fields for supplements, demographics, body information,
   chronic conditions, and current symptoms.
 - A development-stage guided intake agent for deterministic follow-up questions.
+- Normalization benchmark fixtures in `data/benchmarks/`.
 - Consumer summary generation in `medcombo/summary.py`.
 - Safety-language checks in `medcombo/safety_language.py`.
 - A dependency-free multi-turn web demo in `app/web_app.py`.
