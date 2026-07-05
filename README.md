@@ -181,6 +181,12 @@ supplements, demographic information, body information, chronic conditions, and
 current symptoms. Each non-medication section can be marked as no information
 when the user does not have or does not want to provide that context.
 
+After the first review, the guided clarification panel can ask targeted
+follow-up questions about product identity, information source, strength, dose,
+frequency, and formulation. The local demo keeps this multi-turn intake state in
+process memory so answers can update the intake quality panel and regenerate the
+review packet.
+
 Sensitive personal information requires separate privacy, security, consent,
 retention, and compliance handling before real deployment. In this development
 environment, all entered data is used for development and demo processing.
@@ -213,6 +219,8 @@ Zoloft
 
 That sample is intended to exercise duplicate-ingredient, interaction, and
 therapeutic-overlap review signals against the curated demo knowledge base.
+For guided clarification, try entering `metoprolol` and answering `succinate`
+when the demo asks which product is intended.
 
 ## Current Implementation
 
@@ -224,10 +232,12 @@ The first implementation includes:
 - Traceable review rules in `medcombo/rules.py`.
 - Additional intake fields for supplements, demographics, body information,
   chronic conditions, and current symptoms.
+- A development-stage guided intake agent for deterministic follow-up questions.
 - Consumer summary generation in `medcombo/summary.py`.
 - Safety-language checks in `medcombo/safety_language.py`.
-- A dependency-free web demo in `app/web_app.py`.
-- Unit tests in `tests/`.
+- A dependency-free multi-turn web demo in `app/web_app.py`.
+- Unit tests and demo data integrity checks in `tests/`.
+- GitHub Actions unit-test CI in `.github/workflows/test.yml`.
 
 The demo data is not a clinical-grade medication knowledge base. It exists to
 make the review workflow testable while the system architecture is developed.

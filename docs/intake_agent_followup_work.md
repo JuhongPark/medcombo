@@ -21,14 +21,17 @@ Implemented:
 - Answer handling for identity, information source, strength, dose, frequency,
   and formulation.
 - Unknown or unsure answer handling.
-- Web demo connection to agent-generated active questions.
-- Unit tests for core session behavior.
+- Browser-side answer submission for the next active question.
+- Development-only in-memory multi-turn web session state.
+- Updated intake quality panel after each answer.
+- Conversation history display in the web demo.
+- Review packet regeneration from the current agent session.
+- Unit tests for core session behavior, scenario coverage, web rendering, and
+  demo data integrity.
 
 Not implemented yet:
 
-- Browser-side answer submission.
 - Persistent session storage.
-- Multi-turn UI state.
 - LLM-assisted parsing.
 - OCR or image intake.
 - Clinical validation.
@@ -37,6 +40,12 @@ Not implemented yet:
 ## Immediate Next Work
 
 ### 1. Multi-Turn Web UI
+
+Status:
+
+- Implemented for the local development demo with in-memory session storage.
+- Not production-ready persistence, privacy handling, or hosted session
+  management.
 
 Goal:
 
@@ -59,6 +68,11 @@ Exit criteria:
 
 ### 2. Agent Scenario Fixtures
 
+Status:
+
+- Initial scenario coverage is implemented in `tests/test_agent_scenarios.py`.
+- Additional real-world fixture expansion is still recommended.
+
 Goal:
 
 - Make the agent testable against realistic medication intake conversations.
@@ -76,6 +90,13 @@ Exit criteria:
 - Failure diffs clearly show which slot or question changed.
 
 ### 3. Review Packet Upgrade
+
+Status:
+
+- Implemented for verified items, uncertain items, missing details, user answer
+  history, and a consolidated professional-review checklist.
+- Further pharmacist or clinician feedback is still needed before treating the
+  packet as validated.
 
 Goal:
 
@@ -174,13 +195,12 @@ Exit criteria:
 
 ## Recommended Order
 
-1. Multi-turn web UI.
-2. Agent scenario fixtures.
-3. Review packet upgrade.
-4. Normalization benchmark fixtures.
-5. LLM-assisted parsing prototype.
-6. Safety and human factors review.
-7. Privacy and operations plan.
+1. Normalization benchmark fixtures.
+2. Source and evidence expansion.
+3. LLM-assisted parsing prototype.
+4. Safety and human factors review.
+5. Privacy and operations plan.
+6. Persistent session storage if the demo moves beyond local development.
 
 ## Development Rule
 
