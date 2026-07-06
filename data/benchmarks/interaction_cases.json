@@ -1,0 +1,134 @@
+{
+  "benchmark_id": "interaction-demo-2026-05-01",
+  "data_version": "demo-2026-05-01",
+  "cases": [
+    {
+      "case_id": "warfarin_advil_signal",
+      "raw_inputs": ["Warfarin", "Advil"],
+      "expected_signal_ids": ["sig_int_warfarin_nsaid"],
+      "expected_signal_metadata": {
+        "sig_int_warfarin_nsaid": {
+          "review_priority": "prompt_review",
+          "clinical_concern": "Bleeding-related review concern"
+        }
+      }
+    },
+    {
+      "case_id": "warfarin_naproxen_signal",
+      "raw_inputs": ["Warfarin", "Aleve"],
+      "expected_signal_ids": ["sig_int_warfarin_naproxen"],
+      "expected_signal_metadata": {
+        "sig_int_warfarin_naproxen": {
+          "review_priority": "prompt_review",
+          "clinical_concern": "Bleeding-related review concern"
+        }
+      }
+    },
+    {
+      "case_id": "warfarin_aspirin_signal",
+      "raw_inputs": ["Coumadin", "Aspirin"],
+      "expected_signal_ids": ["sig_int_warfarin_aspirin"],
+      "expected_signal_metadata": {
+        "sig_int_warfarin_aspirin": {
+          "review_priority": "prompt_review",
+          "clinical_concern": "Bleeding-related review concern"
+        }
+      }
+    },
+    {
+      "case_id": "apixaban_ibuprofen_signal",
+      "raw_inputs": ["Eliquis", "ibuprofen"],
+      "expected_signal_ids": ["sig_int_apixaban_nsaid"],
+      "expected_signal_metadata": {
+        "sig_int_apixaban_nsaid": {
+          "review_priority": "prompt_review",
+          "clinical_concern": "Bleeding-related review concern"
+        }
+      }
+    },
+    {
+      "case_id": "rivaroxaban_naproxen_signal",
+      "raw_inputs": ["Xarelto", "naproxen"],
+      "expected_signal_ids": ["sig_int_rivaroxaban_nsaid"],
+      "expected_signal_metadata": {
+        "sig_int_rivaroxaban_nsaid": {
+          "review_priority": "prompt_review",
+          "clinical_concern": "Bleeding-related review concern"
+        }
+      }
+    },
+    {
+      "case_id": "sertraline_nyquil_signal",
+      "raw_inputs": ["Zoloft", "NyQuil"],
+      "expected_signal_ids": ["sig_int_ssri_dextromethorphan_sertraline"],
+      "expected_signal_metadata": {
+        "sig_int_ssri_dextromethorphan_sertraline": {
+          "review_priority": "prompt_review",
+          "clinical_concern": "Serotonin-related review concern"
+        }
+      }
+    },
+    {
+      "case_id": "fluoxetine_dayquil_signal",
+      "raw_inputs": ["Prozac", "DayQuil"],
+      "expected_signal_ids": ["sig_int_ssri_dextromethorphan_fluoxetine"],
+      "expected_signal_metadata": {
+        "sig_int_ssri_dextromethorphan_fluoxetine": {
+          "review_priority": "prompt_review",
+          "clinical_concern": "Serotonin-related review concern"
+        }
+      }
+    },
+    {
+      "case_id": "ace_arb_signal",
+      "raw_inputs": ["Lisinopril", "Losartan"],
+      "expected_signal_ids": ["sig_int_ace_arb"],
+      "expected_signal_metadata": {
+        "sig_int_ace_arb": {
+          "review_priority": "prompt_review",
+          "clinical_concern": "Related blood-pressure pathway review concern"
+        }
+      }
+    },
+    {
+      "case_id": "sedating_antihistamines_signal",
+      "raw_inputs": ["Benadryl", "NyQuil"],
+      "expected_signal_ids": ["sig_int_sedating_antihistamines"],
+      "expected_signal_metadata": {
+        "sig_int_sedating_antihistamines": {
+          "review_priority": "routine_review",
+          "clinical_concern": "Sedation and confusion review concern"
+        }
+      }
+    },
+    {
+      "case_id": "salicylate_warfarin_signal",
+      "raw_inputs": ["Warfarin", "Pepto-Bismol"],
+      "expected_signal_ids": ["sig_int_salicylate_warfarin"],
+      "expected_signal_metadata": {
+        "sig_int_salicylate_warfarin": {
+          "review_priority": "prompt_review",
+          "clinical_concern": "Bleeding-related review concern"
+        }
+      }
+    },
+    {
+      "case_id": "metformin_omeprazole_no_possible_interaction",
+      "raw_inputs": ["Metformin", "Prilosec"],
+      "expected_signal_ids": [],
+      "expected_absent_signal_types": ["possible_interaction"]
+    },
+    {
+      "case_id": "zyrtec_claritin_no_possible_interaction",
+      "raw_inputs": ["Zyrtec", "Claritin"],
+      "expected_signal_ids": [],
+      "expected_absent_signal_types": ["possible_interaction"]
+    },
+    {
+      "case_id": "tylenol_advil_no_possible_interaction",
+      "raw_inputs": ["Tylenol", "Advil"],
+      "expected_signal_ids": [],
+      "expected_absent_signal_types": ["possible_interaction"]
+    }
+  ]
+}
