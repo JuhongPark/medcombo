@@ -1,0 +1,85 @@
+{
+  "benchmark_id": "pharmacist-packet-demo-2026-05-01",
+  "data_version": "demo-2026-05-01",
+  "cases": [
+    {
+      "case_id": "warfarin_advil_review_packet",
+      "raw_inputs": ["Warfarin", "Advil"],
+      "source_type": "label",
+      "expected_section_ids": [
+        "review_snapshot",
+        "verified_medications",
+        "identity_confirmation",
+        "missing_details",
+        "duplicate_active_ingredient_signals",
+        "curated_interaction_review_signals",
+        "supplements_and_out_of_scope_items",
+        "context_to_ask_about",
+        "pharmacist_questions",
+        "evidence_appendix"
+      ],
+      "expected_readiness_labels": ["missing_details"],
+      "expected_text_contains": [
+        "Curated Interaction Review Signals:",
+        "Evidence concern: Bleeding-related review concern",
+        "Context to review: bleeding history, kidney function, and other anticoagulant or antiplatelet products",
+        "Signal coverage note"
+      ],
+      "expected_question_contains": [
+        "Can you review whether warfarin and ibuprofen are appropriate together for me"
+      ],
+      "prohibited_text": ["all clear", "no risk", "safety score", "risk score", "safe combination"]
+    },
+    {
+      "case_id": "manual_tylenol_missing_details_packet",
+      "raw_inputs": ["Tylenol"],
+      "source_type": "manual",
+      "expected_section_ids": [
+        "review_snapshot",
+        "verified_medications",
+        "missing_details",
+        "pharmacist_questions"
+      ],
+      "expected_readiness_labels": ["missing_details", "needs_source_confirmation"],
+      "expected_text_contains": [
+        "Medication list readiness:",
+        "Missing Dose, Frequency, Route, Or Formulation:",
+        "Tylenol: missing strength, dose, frequency, and formulation",
+        "Can you confirm \"Tylenol\" against a bottle label, pharmacy list, or medication record?"
+      ],
+      "expected_question_contains": [
+        "Can you verify the strength, dose, frequency, and formulation for \"Tylenol\"?"
+      ],
+      "prohibited_text": ["all clear", "no risk", "safety score", "risk score", "safe combination"]
+    },
+    {
+      "case_id": "unknown_supplement_context_packet",
+      "raw_inputs": ["Mystery capsule"],
+      "source_type": "memory",
+      "supplements": "Fish oil",
+      "conditions": "high blood pressure",
+      "expected_section_ids": [
+        "review_snapshot",
+        "identity_confirmation",
+        "supplements_and_out_of_scope_items",
+        "context_to_ask_about",
+        "pharmacist_questions"
+      ],
+      "expected_readiness_labels": [
+        "needs_identity_review",
+        "missing_details",
+        "needs_source_confirmation",
+        "includes_out_of_scope_items"
+      ],
+      "expected_text_contains": [
+        "Mystery capsule: not matched in the demo dataset",
+        "Supplements recorded for professional review: Fish oil",
+        "Chronic conditions or history: high blood pressure"
+      ],
+      "expected_question_contains": [
+        "Can you help identify \"Mystery capsule\" and check its active ingredients against my other medications?"
+      ],
+      "prohibited_text": ["all clear", "no risk", "safety score", "risk score", "safe combination"]
+    }
+  ]
+}
