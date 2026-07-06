@@ -235,7 +235,7 @@ def _interaction_signals(
 
     signals = []
     for interaction in kb.interactions:
-        ingredient_ids = tuple(interaction["ingredient_ids"])
+        ingredient_ids = interaction.ingredient_ids
         if not all(ingredient_id in ingredient_to_medications for ingredient_id in ingredient_ids):
             continue
 
@@ -246,28 +246,28 @@ def _interaction_signals(
                 for medication in ingredient_to_medications[ingredient_id]
             )
         )
-        explanation = require_consumer_safe_text(interaction["plain_language_explanation"])
-        question = require_consumer_safe_text(interaction["professional_question"])
+        explanation = require_consumer_safe_text(interaction.plain_language_explanation)
+        question = require_consumer_safe_text(interaction.professional_question)
         patient_specific_modifiers = tuple(
             require_consumer_safe_text(modifier)
-            for modifier in interaction.get("patient_specific_modifiers", ())
+            for modifier in interaction.patient_specific_modifiers
         )
         signals.append(
             SafetySignal(
-                signal_id=f"sig_{interaction['interaction_id']}",
+                signal_id=f"sig_{interaction.interaction_id}",
                 signal_type="possible_interaction",
-                review_priority=interaction["review_priority"],
+                review_priority=interaction.review_priority,
                 medication_ids=medication_ids,
                 ingredient_ids=ingredient_ids,
                 plain_language_explanation=explanation,
                 professional_question=question,
-                source_ids=tuple(interaction["source_ids"]),
-                rule_id=f"interaction.{interaction['interaction_id']}",
+                source_ids=interaction.source_ids,
+                rule_id=f"interaction.{interaction.interaction_id}",
                 data_version=kb.data_version,
                 confidence=0.85,
-                evidence_type=require_consumer_safe_text(interaction.get("evidence_type", "")),
-                clinical_concern=require_consumer_safe_text(interaction.get("clinical_concern", "")),
-                evidence_summary=require_consumer_safe_text(interaction.get("evidence_summary", "")),
+                evidence_type=require_consumer_safe_text(interaction.evidence_type),
+                clinical_concern=require_consumer_safe_text(interaction.clinical_concern),
+                evidence_summary=require_consumer_safe_text(interaction.evidence_summary),
                 patient_specific_modifiers=patient_specific_modifiers,
             )
         )
