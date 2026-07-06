@@ -58,6 +58,35 @@ class WebAppWorkflowTest(unittest.TestCase):
         self.assertIn("Evidence concern: Bleeding-related review concern", rendered)
         self.assertIn("Context to review:", rendered)
 
+    def test_render_result_keeps_no_signal_boundary_near_results(self):
+        agent_session = start_intake_agent_session(["Metformin", "Prilosec"], source_type="label")
+        state = WebSessionState(
+            agent_session=agent_session,
+            medications_text="Metformin\nPrilosec",
+            supplements_text="",
+            demographics_text="",
+            body_info_text="",
+            conditions_text="",
+            symptoms_text="",
+            no_information=(),
+            source_type="label",
+        )
+        result = review_from_session_state(state)
+
+        rendered = render_result(
+            result,
+            intake_items=agent_session.intake_items,
+            conversation_questions=agent_session.active_questions,
+            agent_session=agent_session,
+            web_session_id="web_test",
+        )
+
+        self.assertIn("Signal coverage note", rendered)
+        self.assertIn("not a complete medication safety screen", rendered)
+        self.assertIn("No demo-dataset safety signals were generated", rendered)
+        self.assertNotIn("no risk", rendered.lower())
+        self.assertNotIn("all clear", rendered.lower())
+
     def test_review_from_session_state_uses_updated_agent_identity(self):
         agent_session = start_intake_agent_session(["metoprolol"], source_type="manual")
         updated_session = answer_agent_question(

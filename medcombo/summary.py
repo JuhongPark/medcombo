@@ -57,8 +57,12 @@ def build_consumer_summary(
     else:
         lines.append("- None entered")
 
+    lines.extend([
+        "",
+        "Review-worthy signals:",
+        "Signal coverage note: MedCombo only checks the curated demo dataset and review rules. This is not a complete medication safety screen.",
+    ])
     if result.signals:
-        lines.extend(["", "Review-worthy signals:"])
         for signal in result.signals:
             lines.append(f"- [{signal.review_priority}] {signal.plain_language_explanation}")
             lines.append(f"  Question: {signal.professional_question}")
@@ -73,11 +77,9 @@ def build_consumer_summary(
                     f"{names(signal.patient_specific_modifiers)}"
                 )
     else:
-        lines.extend([
-            "",
-            "Review-worthy signals:",
-            "- No demo-dataset safety signals were generated. This does not mean the medication list has no risk.",
-        ])
+        lines.append(
+            "- No demo-dataset safety signals were generated. A pharmacist or clinician should still review unresolved products, missing details, and medication questions."
+        )
 
     lines.extend(["", "Pharmacist or clinician review checklist:"])
     lines.extend(_professional_checklist_lines(result, intake_items, conversation_questions))

@@ -10,9 +10,13 @@ PROHIBITED_PATTERNS = (
     re.compile(r"\bstart taking\b", re.IGNORECASE),
     re.compile(r"\bchange how you take\b(?!.*pharmacist|.*clinician|.*doctor)", re.IGNORECASE),
     re.compile(r"\bsafe to take\b", re.IGNORECASE),
+    re.compile(r"\bsafe combination\b", re.IGNORECASE),
     re.compile(r"\bunsafe\b", re.IGNORECASE),
     re.compile(r"\bdo not take\b", re.IGNORECASE),
     re.compile(r"\byou should take\b", re.IGNORECASE),
+    re.compile(r"\ball clear\b", re.IGNORECASE),
+    re.compile(r"\bno risk\b", re.IGNORECASE),
+    re.compile(r"\bnothing to worry about\b", re.IGNORECASE),
 )
 
 

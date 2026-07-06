@@ -10,6 +10,17 @@ class SafetyLanguageTest(unittest.TestCase):
         self.assertFalse(is_consumer_safe_text(text))
         self.assertIn("stop taking", find_prohibited_phrases(text))
 
+    def test_detects_false_reassurance_language(self):
+        texts = (
+            "All clear.",
+            "There is no risk.",
+            "This is a safe combination.",
+            "There is nothing to worry about.",
+        )
+
+        for text in texts:
+            self.assertFalse(is_consumer_safe_text(text), text)
+
     def test_allows_review_signal_language(self):
         text = "This combination may need pharmacist review before medication changes."
 

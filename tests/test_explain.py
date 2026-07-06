@@ -89,6 +89,16 @@ class ExplainTest(unittest.TestCase):
         self.assertIn("Answer: succinate", summary)
         self.assertIn("Metoprolol Succinate", summary)
 
+    def test_no_signal_summary_preserves_coverage_boundary(self):
+        result = review_medication_list(["Metformin", "Prilosec"])
+        summary = build_consumer_summary(result)
+
+        self.assertIn("Signal coverage note:", summary)
+        self.assertIn("not a complete medication safety screen", summary)
+        self.assertIn("No demo-dataset safety signals were generated", summary)
+        self.assertNotIn("no risk", summary.lower())
+        self.assertNotIn("all clear", summary.lower())
+
 
 if __name__ == "__main__":
     unittest.main()

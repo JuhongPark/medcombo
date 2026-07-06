@@ -683,9 +683,15 @@ def render_result(
         signals = """
         <div class="item">
           <div class="item-title">No demo signals</div>
-          <div class="meta">No demo-dataset safety signals were generated. This does not mean the medication list has no risk.</div>
+          <div class="meta">No demo-dataset safety signals were generated. A pharmacist or clinician should still review unresolved products, missing details, and medication questions.</div>
         </div>
         """
+    signal_coverage_note = """
+    <div class="item">
+      <div class="item-title">Signal coverage note</div>
+      <div class="meta">MedCombo only checks the curated demo dataset and review rules. This is not a complete medication safety screen.</div>
+    </div>
+    """
     intake_quality = render_intake_quality(intake_items)
     conversation = render_conversation_questions(
         conversation_questions,
@@ -721,7 +727,7 @@ def render_result(
     </section>
     <section class="section">
       <h2>Review-worthy signals</h2>
-      <div class="signal-list">{signals}</div>
+      <div class="signal-list">{signal_coverage_note}{signals}</div>
     </section>
     <section class="section">
       <h2>Pharmacist or clinician summary</h2>
