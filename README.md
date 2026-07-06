@@ -197,7 +197,7 @@ Run tests:
 python -m unittest discover
 ```
 
-Run the normalization benchmark fixture set:
+Run the benchmark fixture sets:
 
 ```bash
 python -m medcombo.benchmarks
@@ -207,6 +207,12 @@ Start the local web demo:
 
 ```bash
 python -m app.web_app --port 8010
+```
+
+Start a synthetic sample-only demo for hosted or shared screens:
+
+```bash
+python -m app.web_app --port 8010 --sample-only
 ```
 
 Then open:
@@ -227,6 +233,10 @@ That sample is intended to exercise duplicate-ingredient, interaction, and
 therapeutic-overlap review signals against the curated demo knowledge base.
 For guided clarification, try entering `metoprolol` and answering `succinate`
 when the demo asks which product is intended.
+
+In sample-only mode, the form uses the bundled synthetic sample and disables
+free-text collection. It is intended for demos that should not invite real
+medication or health information entry.
 
 ## Current Implementation
 

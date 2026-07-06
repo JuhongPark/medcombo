@@ -17,6 +17,11 @@ from medcombo.rules import review_consumer_intake
 
 
 DEFAULT_MEDICATIONS = "Tylenol\nNyQuil\nZoloft"
+SAMPLE_SOURCE_TYPE = "label"
+SAMPLE_ONLY_NOTICE = (
+    "Synthetic sample mode is on. This hosted demo uses only bundled sample "
+    "inputs. Do not enter real medication or health information."
+)
 NO_INFORMATION_LABELS = {
     "supplements": "No supplement information",
     "demographics": "No demographic information",
@@ -47,6 +52,9 @@ class MedComboHandler(BaseHTTPRequestHandler):
         if self.path == "/health":
             self._send_text("ok\n")
             return
+        if self._sample_only_mode():
+            self._send_html(render_sample_only_page())
+            return
         self._send_html(
             render_page(
                 medications_text=DEFAULT_MEDICATIONS,
@@ -69,6 +77,9 @@ class MedComboHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         length = int(self.headers.get("Content-Length", "0"))
         body = self.rfile.read(length).decode("utf-8")
+        if self._sample_only_mode():
+            self._send_html(render_sample_only_page())
+            return
         form = parse_qs(body)
         action = _form_value(form, "action") or "review"
         if action == "reset":
@@ -200,6 +211,9 @@ class MedComboHandler(BaseHTTPRequestHandler):
     def log_message(self, format: str, *args: object) -> None:
         return
 
+    def _sample_only_mode(self) -> bool:
+        return bool(getattr(self.server, "sample_only", False))
+
     def _send_html(self, content: str) -> None:
         encoded = content.encode("utf-8")
         self.send_response(HTTPStatus.OK)
@@ -247,6 +261,48 @@ def review_from_session_state(state: WebSessionState):
     )
 
 
+def render_sample_only_page() -> str:
+    medication_lines = [
+        line.strip()
+        for line in DEFAULT_MEDICATIONS.splitlines()
+        if line.strip()
+    ]
+    agent_session = start_intake_agent_session(
+        medication_lines,
+        source_type=SAMPLE_SOURCE_TYPE,
+        max_questions=8,
+    )
+    state = WebSessionState(
+        agent_session=agent_session,
+        medications_text=DEFAULT_MEDICATIONS,
+        supplements_text="",
+        demographics_text="",
+        body_info_text="",
+        conditions_text="",
+        symptoms_text="",
+        no_information=(),
+        source_type=SAMPLE_SOURCE_TYPE,
+    )
+    result = review_from_session_state(state)
+    return render_page(
+        medications_text=DEFAULT_MEDICATIONS,
+        supplements_text="",
+        demographics_text="",
+        body_info_text="",
+        conditions_text="",
+        symptoms_text="",
+        no_information=(),
+        source_type=SAMPLE_SOURCE_TYPE,
+        error_message="",
+        result=result,
+        intake_items=agent_session.intake_items,
+        conversation_questions=agent_session.active_questions,
+        agent_session=agent_session,
+        web_session_id="sample_only",
+        sample_only=True,
+    )
+
+
 def render_page(
     medications_text: str,
     supplements_text: str,
@@ -262,6 +318,7 @@ def render_page(
     conversation_questions: tuple = (),
     agent_session=None,
     web_session_id: str = "",
+    sample_only: bool = False,
 ) -> str:
     escaped_medications = html.escape(medications_text)
     escaped_supplements = html.escape(supplements_text)
@@ -276,6 +333,7 @@ def render_page(
             conversation_questions,
             agent_session=agent_session,
             web_session_id=web_session_id,
+            sample_only=sample_only,
         )
         if result
         else render_empty_state(error_message)
@@ -286,6 +344,10 @@ def render_page(
     no_conditions_checked = checked_attr("conditions", no_information)
     no_symptoms_checked = checked_attr("symptoms", no_information)
     source_type_options = render_source_type_options(source_type)
+    sample_text_attr = ' readonly aria-readonly="true"' if sample_only else ""
+    sample_disabled_attr = " disabled" if sample_only else ""
+    sample_notice = render_sample_only_notice(sample_only)
+    submit_label = "Build sample packet" if sample_only else "Build review packet"
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -570,40 +632,41 @@ def render_page(
       <form class="review-form" method="post">
         {render_error(error_message)}
         <div class="notice">{html.escape(SENSITIVE_DATA_NOTICE)}</div>
+        {sample_notice}
         <div class="form-section">
           <label for="medications">Medication list<span class="required">required</span></label>
-          <textarea class="medications-input" id="medications" name="medications" spellcheck="false" required placeholder="One prescription or OTC medicine per line">{escaped_medications}</textarea>
+          <textarea class="medications-input" id="medications" name="medications" spellcheck="false" required{sample_text_attr} placeholder="One prescription or OTC medicine per line">{escaped_medications}</textarea>
         </div>
         <div class="form-section">
           <label for="source_type">How this medication list was entered</label>
-          <select id="source_type" name="source_type">{source_type_options}</select>
+          <select id="source_type" name="source_type"{sample_disabled_attr}>{source_type_options}</select>
         </div>
         <div class="form-section">
           <label for="supplements">Supplements</label>
-          <textarea id="supplements" name="supplements" spellcheck="false" placeholder="Vitamin D&#10;Fish oil&#10;Magnesium">{escaped_supplements}</textarea>
-          <label class="checkbox-row"><input type="checkbox" name="no_supplements" value="1"{no_supplements_checked}> No supplement information</label>
+          <textarea id="supplements" name="supplements" spellcheck="false"{sample_text_attr} placeholder="Vitamin D&#10;Fish oil&#10;Magnesium">{escaped_supplements}</textarea>
+          <label class="checkbox-row"><input type="checkbox" name="no_supplements" value="1"{no_supplements_checked}{sample_disabled_attr}> No supplement information</label>
         </div>
         <div class="form-section">
           <label for="demographics">Demographic information</label>
-          <textarea id="demographics" name="demographics" spellcheck="false" placeholder="Age range, sex, pregnancy status, or other context the user chooses to provide">{escaped_demographics}</textarea>
-          <label class="checkbox-row"><input type="checkbox" name="no_demographics" value="1"{no_demographics_checked}> No demographic information</label>
+          <textarea id="demographics" name="demographics" spellcheck="false"{sample_text_attr} placeholder="Age range, sex, pregnancy status, or other context the user chooses to provide">{escaped_demographics}</textarea>
+          <label class="checkbox-row"><input type="checkbox" name="no_demographics" value="1"{no_demographics_checked}{sample_disabled_attr}> No demographic information</label>
         </div>
         <div class="form-section">
           <label for="body_info">Body information</label>
-          <textarea id="body_info" name="body_info" spellcheck="false" placeholder="Height, weight, kidney or liver notes, blood pressure context, or other relevant body information">{escaped_body_info}</textarea>
-          <label class="checkbox-row"><input type="checkbox" name="no_body_info" value="1"{no_body_info_checked}> No body information</label>
+          <textarea id="body_info" name="body_info" spellcheck="false"{sample_text_attr} placeholder="Height, weight, kidney or liver notes, blood pressure context, or other relevant body information">{escaped_body_info}</textarea>
+          <label class="checkbox-row"><input type="checkbox" name="no_body_info" value="1"{no_body_info_checked}{sample_disabled_attr}> No body information</label>
         </div>
         <div class="form-section">
           <label for="conditions">Chronic conditions or history</label>
-          <textarea id="conditions" name="conditions" spellcheck="false" placeholder="One condition or history item per line">{escaped_conditions}</textarea>
-          <label class="checkbox-row"><input type="checkbox" name="no_conditions" value="1"{no_conditions_checked}> No chronic condition or history information</label>
+          <textarea id="conditions" name="conditions" spellcheck="false"{sample_text_attr} placeholder="One condition or history item per line">{escaped_conditions}</textarea>
+          <label class="checkbox-row"><input type="checkbox" name="no_conditions" value="1"{no_conditions_checked}{sample_disabled_attr}> No chronic condition or history information</label>
         </div>
         <div class="form-section">
           <label for="symptoms">Current symptoms</label>
-          <textarea id="symptoms" name="symptoms" spellcheck="false" placeholder="One symptom or concern per line">{escaped_symptoms}</textarea>
-          <label class="checkbox-row"><input type="checkbox" name="no_symptoms" value="1"{no_symptoms_checked}> No current symptom information</label>
+          <textarea id="symptoms" name="symptoms" spellcheck="false"{sample_text_attr} placeholder="One symptom or concern per line">{escaped_symptoms}</textarea>
+          <label class="checkbox-row"><input type="checkbox" name="no_symptoms" value="1"{no_symptoms_checked}{sample_disabled_attr}> No current symptom information</label>
         </div>
-        <button type="submit" name="action" value="review">Build review packet</button>
+        <button type="submit" name="action" value="review">{submit_label}</button>
         <button class="secondary" type="submit" name="action" value="reset" formnovalidate>Start over</button>
         <div class="fineprint">Use pharmacist or clinician review before medication changes.</div>
       </form>
@@ -646,6 +709,12 @@ def render_error(error_message: str) -> str:
     return f"""<div class="error">{html.escape(error_message)}</div>"""
 
 
+def render_sample_only_notice(sample_only: bool) -> str:
+    if not sample_only:
+        return ""
+    return f"""<div class="notice">{html.escape(SAMPLE_ONLY_NOTICE)}</div>"""
+
+
 def render_empty_state(error_message: str = "") -> str:
     detail = (
         html.escape(error_message)
@@ -669,6 +738,7 @@ def render_result(
     conversation_questions: tuple = (),
     agent_session=None,
     web_session_id: str = "",
+    sample_only: bool = False,
 ) -> str:
     medications = "".join(render_medication(medication) for medication in result.medications)
     if not medications:
@@ -703,6 +773,7 @@ def render_result(
         conversation_questions,
         agent_session=agent_session,
         web_session_id=web_session_id,
+        sample_only=sample_only,
     )
     summary = html.escape(render_review_packet_text(packet))
     context = render_context(result.context)
@@ -800,6 +871,7 @@ def render_conversation_questions(
     conversation_questions: tuple,
     agent_session=None,
     web_session_id: str = "",
+    sample_only: bool = False,
 ) -> str:
     turns = render_agent_turns(agent_session.turns if agent_session else ())
     if not conversation_questions:
@@ -815,6 +887,18 @@ def render_conversation_questions(
       <div>I will ask for facts that help prepare a pharmacist or clinician review. Unknown answers can stay marked for review.</div>
     </div>
     """
+    if sample_only:
+        sample_intro = """
+        <div class="item chat-message">
+          <div class="speaker">Assistant</div>
+          <div>Synthetic sample mode shows clarification prompts without collecting answers.</div>
+        </div>
+        """
+        queued_questions = "".join(
+            render_conversation_question(question)
+            for question in conversation_questions
+        )
+        return turns + intro + sample_intro + queued_questions
     active_form = render_active_question_form(conversation_questions[0], web_session_id)
     queued_questions = "".join(
         render_conversation_question(question)
@@ -996,10 +1080,13 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", default=8010, type=int)
+    parser.add_argument("--sample-only", action="store_true")
     args = parser.parse_args()
 
     server = ThreadingHTTPServer((args.host, args.port), MedComboHandler)
-    print(f"MedCombo demo running at http://{args.host}:{args.port}")
+    server.sample_only = args.sample_only
+    mode = "synthetic sample-only" if args.sample_only else "local development"
+    print(f"MedCombo demo running at http://{args.host}:{args.port} ({mode})")
     server.serve_forever()
 
 
