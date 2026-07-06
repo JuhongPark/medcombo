@@ -38,10 +38,7 @@
       "raw_text": "metoprolol",
       "source_type": "manual",
       "expected_match_status": "ambiguous",
-      "expected_candidate_ids": [
-        "med_metoprolol_succinate",
-        "med_metoprolol_tartrate"
-      ]
+      "expected_candidate_ids": ["med_metoprolol_succinate", "med_metoprolol_tartrate"]
     },
     {
       "case_id": "brand_toprol_xl",
@@ -61,6 +58,312 @@
       "case_id": "unknown_memory_product",
       "raw_text": "Mystery capsule",
       "source_type": "memory",
+      "expected_match_status": "unknown"
+    },
+    {
+      "case_id": "lowercase_brand_advil",
+      "raw_text": "advil",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_advil"
+    },
+    {
+      "case_id": "typo_brand_advil",
+      "raw_text": "Advl",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_advil"
+    },
+    {
+      "case_id": "typo_brand_motrin",
+      "raw_text": "Motrn",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_motrin"
+    },
+    {
+      "case_id": "generic_ibuprofen_with_details",
+      "raw_text": "ibuprofen 200 mg 1 tablet as needed",
+      "source_type": "label",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_generic_ibuprofen",
+      "expected_strength": "200 mg",
+      "expected_dose": "1 tablet",
+      "expected_frequency": "as needed",
+      "expected_formulation": "tablet"
+    },
+    {
+      "case_id": "typo_generic_naproxen",
+      "raw_text": "Naproxn",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_generic_naproxen"
+    },
+    {
+      "case_id": "typo_brand_aleve",
+      "raw_text": "Alevee",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_aleve"
+    },
+    {
+      "case_id": "aspirin_brand_alias",
+      "raw_text": "Bayer aspirin",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_aspirin"
+    },
+    {
+      "case_id": "benadryl_ingredient_alias",
+      "raw_text": "diphenhydramine",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_benadryl"
+    },
+    {
+      "case_id": "typo_brand_benadryl",
+      "raw_text": "Benadrl",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_benadryl"
+    },
+    {
+      "case_id": "zyrtec_ingredient_alias",
+      "raw_text": "cetirizine",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_zyrtec"
+    },
+    {
+      "case_id": "typo_brand_claritin",
+      "raw_text": "Clartin",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_claritin"
+    },
+    {
+      "case_id": "combination_otc_dayquil",
+      "raw_text": "dayquil cold and flu",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_dayquil"
+    },
+    {
+      "case_id": "ambiguous_cold_flu_typo",
+      "raw_text": "Nyquil cold and fluu",
+      "source_type": "manual",
+      "expected_match_status": "ambiguous",
+      "expected_candidate_ids": ["med_nyquil", "med_dayquil"]
+    },
+    {
+      "case_id": "compact_mucinex_dm",
+      "raw_text": "MucinexDM",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_mucinex_dm"
+    },
+    {
+      "case_id": "robitussin_cough_alias",
+      "raw_text": "Robitussin cough",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_robitussin_dm"
+    },
+    {
+      "case_id": "sudafed_ingredient_alias",
+      "raw_text": "pseudoephedrine",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_sudafed"
+    },
+    {
+      "case_id": "zoloft_ingredient_alias",
+      "raw_text": "sertraline",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_zoloft"
+    },
+    {
+      "case_id": "typo_brand_zoloft",
+      "raw_text": "Zolft",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_zoloft"
+    },
+    {
+      "case_id": "prozac_ingredient_alias",
+      "raw_text": "fluoxetine",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_prozac"
+    },
+    {
+      "case_id": "typo_brand_prozac",
+      "raw_text": "Prozc",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_prozac"
+    },
+    {
+      "case_id": "lexapro_ingredient_alias",
+      "raw_text": "escitalopram",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_lexapro"
+    },
+    {
+      "case_id": "typo_brand_lexapro",
+      "raw_text": "Lexpro",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_lexapro"
+    },
+    {
+      "case_id": "warfarin_brand_alias",
+      "raw_text": "Coumadin",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_warfarin"
+    },
+    {
+      "case_id": "typo_generic_warfarin",
+      "raw_text": "Warfrin",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_warfarin"
+    },
+    {
+      "case_id": "eliquis_ingredient_alias",
+      "raw_text": "apixaban",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_eliquis"
+    },
+    {
+      "case_id": "typo_brand_eliquis",
+      "raw_text": "Eliqis",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_eliquis"
+    },
+    {
+      "case_id": "xarelto_ingredient_alias",
+      "raw_text": "rivaroxaban",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_xarelto"
+    },
+    {
+      "case_id": "lisinopril_brand_alias",
+      "raw_text": "Prinivil",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_lisinopril"
+    },
+    {
+      "case_id": "typo_generic_lisinopril",
+      "raw_text": "Lisinoprl",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_lisinopril"
+    },
+    {
+      "case_id": "losartan_brand_alias",
+      "raw_text": "Cozaar",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_losartan"
+    },
+    {
+      "case_id": "typo_generic_losartan",
+      "raw_text": "Losartn",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_losartan"
+    },
+    {
+      "case_id": "metformin_brand_alias",
+      "raw_text": "Glucophage",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_metformin"
+    },
+    {
+      "case_id": "metformin_with_details",
+      "raw_text": "metformin 500 mg one tablet twice daily",
+      "source_type": "label",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_metformin",
+      "expected_strength": "500 mg",
+      "expected_dose": "one tablet",
+      "expected_frequency": "twice daily",
+      "expected_formulation": "tablet"
+    },
+    {
+      "case_id": "simvastatin_brand_alias",
+      "raw_text": "Zocor",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_simvastatin"
+    },
+    {
+      "case_id": "atorvastatin_brand_alias",
+      "raw_text": "Lipitor",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_atorvastatin"
+    },
+    {
+      "case_id": "omeprazole_brand_alias",
+      "raw_text": "Prilosec",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_omeprazole"
+    },
+    {
+      "case_id": "famotidine_brand_alias",
+      "raw_text": "Pepcid",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_famotidine"
+    },
+    {
+      "case_id": "prednisone_with_details",
+      "raw_text": "prednisone 10 mg 1 tablet daily",
+      "source_type": "label",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_prednisone",
+      "expected_strength": "10 mg",
+      "expected_dose": "1 tablet",
+      "expected_frequency": "daily",
+      "expected_formulation": "tablet"
+    },
+    {
+      "case_id": "albuterol_brand_alias",
+      "raw_text": "Ventolin",
+      "source_type": "manual",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_albuterol"
+    },
+    {
+      "case_id": "albuterol_with_inhaler_details",
+      "raw_text": "albuterol 2 puffs as needed",
+      "source_type": "label",
+      "expected_match_status": "matched",
+      "expected_medication_id": "med_albuterol",
+      "expected_dose": "2 puffs",
+      "expected_frequency": "as needed"
+    },
+    {
+      "case_id": "supplement_out_of_scope_vitamin_d",
+      "raw_text": "Vitamin D",
+      "source_type": "manual",
+      "expected_match_status": "unknown"
+    },
+    {
+      "case_id": "supplement_out_of_scope_st_johns_wort",
+      "raw_text": "St John's wort",
+      "source_type": "manual",
       "expected_match_status": "unknown"
     }
   ]

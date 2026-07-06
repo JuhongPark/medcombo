@@ -9,7 +9,7 @@ class NormalizationBenchmarkTest(unittest.TestCase):
 
         self.assertEqual(benchmark["benchmark_id"], "normalization-demo-2026-05-01")
         self.assertEqual(benchmark["data_version"], "demo-2026-05-01")
-        self.assertGreaterEqual(len(benchmark["cases"]), 8)
+        self.assertGreaterEqual(len(benchmark["cases"]), 50)
         for case in benchmark["cases"]:
             self.assertIn("case_id", case)
             self.assertIn("raw_text", case)
@@ -24,8 +24,8 @@ class NormalizationBenchmarkTest(unittest.TestCase):
             if result["failures"]
         ]
         self.assertEqual(failures, [])
-        self.assertEqual(report["case_count"], 8)
-        self.assertEqual(report["pass_count"], 8)
+        self.assertGreaterEqual(report["case_count"], 50)
+        self.assertEqual(report["pass_count"], report["case_count"])
         self.assertEqual(report["fail_count"], 0)
 
 
