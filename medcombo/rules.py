@@ -234,7 +234,7 @@ def _interaction_signals(
             ingredient_to_medications[ingredient.ingredient_id].append(medication)
 
     signals = []
-    for interaction in kb.interactions:
+    for interaction in kb.evidence_registry.eligible_interactions():
         ingredient_ids = interaction.ingredient_ids
         if not all(ingredient_id in ingredient_to_medications for ingredient_id in ingredient_ids):
             continue

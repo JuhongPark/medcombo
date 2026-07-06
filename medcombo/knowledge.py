@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from medcombo.evidence import InteractionEvidence
+from medcombo.evidence import EvidenceRegistry, InteractionEvidence
 from medcombo.models import DrugClass, Ingredient, MedicationRecord, SourceReference
 from medcombo.text import clean_key
 
@@ -19,6 +19,7 @@ class KnowledgeBase:
         drug_classes: dict[str, DrugClass],
         interactions: tuple[InteractionEvidence, ...],
         sources: dict[str, SourceReference],
+        evidence_registry: EvidenceRegistry | None = None,
     ) -> None:
         self.data_version = data_version
         self.medications = medications
@@ -26,6 +27,7 @@ class KnowledgeBase:
         self.drug_classes = drug_classes
         self.interactions = interactions
         self.sources = sources
+        self.evidence_registry = evidence_registry or EvidenceRegistry.from_interactions(interactions)
         self.alias_index = self._build_alias_index()
 
     @classmethod
