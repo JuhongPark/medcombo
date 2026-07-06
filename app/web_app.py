@@ -12,8 +12,8 @@ from urllib.parse import parse_qs
 
 from medcombo.agent import answer_agent_question, start_intake_agent_session
 from medcombo.disclaimers import PRODUCT_STATUS_NOTICE, SENSITIVE_DATA_NOTICE
+from medcombo.review_packet import build_review_packet, render_review_packet_text
 from medcombo.rules import review_consumer_intake
-from medcombo.summary import build_consumer_summary
 
 
 DEFAULT_MEDICATIONS = "Tylenol\nNyQuil\nZoloft"
@@ -692,20 +692,19 @@ def render_result(
       <div class="meta">MedCombo only checks the curated demo dataset and review rules. This is not a complete medication safety screen.</div>
     </div>
     """
-    intake_quality = render_intake_quality(intake_items)
+    packet = build_review_packet(
+        result,
+        intake_items=intake_items,
+        conversation_questions=conversation_questions,
+        agent_turns=agent_session.turns if agent_session else (),
+    )
+    intake_quality = render_readiness(packet.readiness) + render_intake_quality(intake_items)
     conversation = render_conversation_questions(
         conversation_questions,
         agent_session=agent_session,
         web_session_id=web_session_id,
     )
-    summary = html.escape(
-        build_consumer_summary(
-            result,
-            intake_items=intake_items,
-            conversation_questions=conversation_questions,
-            agent_turns=agent_session.turns if agent_session else (),
-        )
-    )
+    summary = html.escape(render_review_packet_text(packet))
     context = render_context(result.context)
     sources = "".join(render_source(source) for source in result.sources)
     return f"""
@@ -714,7 +713,7 @@ def render_result(
       <div class="med-list">{medications}</div>
     </section>
     <section class="section">
-      <h2>Intake quality</h2>
+      <h2>Medication list readiness</h2>
       <div class="med-list">{intake_quality}</div>
     </section>
     <section class="section">
@@ -737,6 +736,24 @@ def render_result(
       <h2>Sources</h2>
       <div class="source-list">{sources}</div>
     </section>
+    """
+
+
+def render_readiness(readiness) -> str:
+    labels = ", ".join(label.replace("_", " ") for label in readiness.labels)
+    return f"""
+    <div class="item">
+      <div class="item-title">Readiness labels</div>
+      <div class="meta">{html.escape(labels)}</div>
+      <div class="field-list">
+        <span class="field-chip">verified {readiness.verified_count}</span>
+        <span class="field-chip">ambiguous {readiness.ambiguous_count}</span>
+        <span class="field-chip">unknown {readiness.unknown_count}</span>
+        <span class="field-chip">missing fields {readiness.missing_field_count}</span>
+        <span class="field-chip">source checks {readiness.low_confidence_source_count}</span>
+        <span class="field-chip">out of scope {readiness.out_of_scope_count}</span>
+      </div>
+    </div>
     """
 
 

@@ -53,8 +53,8 @@ class MedicationIntakeTest(unittest.TestCase):
 
         summary = build_consumer_summary(result, intake_items=items, conversation_questions=questions)
 
-        self.assertIn("Intake quality and missing information:", summary)
-        self.assertIn("Conversation follow-up prompts:", summary)
+        self.assertIn("Medication list readiness:", summary)
+        self.assertIn("Pharmacist Questions:", summary)
         self.assertIn("matched_by_name", summary)
 
 

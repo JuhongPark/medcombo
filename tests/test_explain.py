@@ -10,7 +10,7 @@ class ExplainTest(unittest.TestCase):
         result = review_medication_list(["Warfarin", "Advil"])
         summary = build_consumer_summary(result)
 
-        self.assertIn("MedCombo consumer health review summary", summary)
+        self.assertIn("MedCombo pharmacist-ready review packet", summary)
         self.assertIn("Question:", summary)
         self.assertIn("src_dailymed", summary)
         self.assertIn("not clinically validated", summary)
@@ -39,7 +39,8 @@ class ExplainTest(unittest.TestCase):
         )
         summary = build_consumer_summary(result)
 
-        self.assertIn("Supplements entered:", summary)
+        self.assertIn("Supplements And Out-Of-Scope Items:", summary)
+        self.assertIn("Supplements recorded for professional review", summary)
         self.assertIn("Vitamin D", summary)
         self.assertIn("Demographics: Adult, age 45", summary)
         self.assertIn("Body information: Kidney function concern", summary)
@@ -81,11 +82,11 @@ class ExplainTest(unittest.TestCase):
             agent_turns=updated.turns,
         )
 
-        self.assertIn("Verified medications:", summary)
-        self.assertIn("Uncertain or unresolved medications:", summary)
-        self.assertIn("Missing intake details:", summary)
-        self.assertIn("User answer history:", summary)
-        self.assertIn("Pharmacist or clinician review checklist:", summary)
+        self.assertIn("Verified Medication Items:", summary)
+        self.assertIn("Needs Identity Confirmation:", summary)
+        self.assertIn("Missing Dose, Frequency, Route, Or Formulation:", summary)
+        self.assertIn("User Answer History:", summary)
+        self.assertIn("Pharmacist Questions:", summary)
         self.assertIn("Answer: succinate", summary)
         self.assertIn("Metoprolol Succinate", summary)
 
