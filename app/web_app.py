@@ -562,7 +562,7 @@ def render_page(
   <header>
     <div class="wrap topbar">
       <h1>MedCombo</h1>
-      <div class="status">Consumer-first healthcare AI system. {html.escape(PRODUCT_STATUS_NOTICE)}</div>
+      <div class="status">Medication review preparation system for pharmacist-ready packets. {html.escape(PRODUCT_STATUS_NOTICE)}</div>
     </div>
   </header>
   <main class="wrap">
@@ -603,7 +603,7 @@ def render_page(
           <textarea id="symptoms" name="symptoms" spellcheck="false" placeholder="One symptom or concern per line">{escaped_symptoms}</textarea>
           <label class="checkbox-row"><input type="checkbox" name="no_symptoms" value="1"{no_symptoms_checked}> No current symptom information</label>
         </div>
-        <button type="submit" name="action" value="review">Review list</button>
+        <button type="submit" name="action" value="review">Build review packet</button>
         <button class="secondary" type="submit" name="action" value="reset" formnovalidate>Start over</button>
         <div class="fineprint">Use pharmacist or clinician review before medication changes.</div>
       </form>
@@ -650,11 +650,11 @@ def render_empty_state(error_message: str = "") -> str:
     detail = (
         html.escape(error_message)
         if error_message
-        else "Enter at least one medication. Optional health details can be entered or marked as no information."
+        else "Enter at least one medication. Optional health details can be entered or marked as no information before packet preparation."
     )
     return """
     <section class="section">
-      <h2>Review</h2>
+      <h2>Review packet</h2>
       <div class="item">
         <div class="item-title">Ready</div>
         <div class="meta">""" + detail + """</div>
@@ -710,7 +710,7 @@ def render_result(
     sources = "".join(render_source(source) for source in result.sources)
     return f"""
     <section class="section">
-      <h2>Normalized medications</h2>
+      <h2>Normalized medication identities</h2>
       <div class="med-list">{medications}</div>
     </section>
     <section class="section">
@@ -726,11 +726,11 @@ def render_result(
       <div class="med-list">{context}</div>
     </section>
     <section class="section">
-      <h2>Review-worthy signals</h2>
+      <h2>Review signals and limitations</h2>
       <div class="signal-list">{signal_coverage_note}{signals}</div>
     </section>
     <section class="section">
-      <h2>Pharmacist or clinician summary</h2>
+      <h2>Pharmacist-ready review packet</h2>
       <div class="item"><pre>{summary}</pre></div>
     </section>
     <section class="section">

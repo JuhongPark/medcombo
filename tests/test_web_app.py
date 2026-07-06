@@ -1,10 +1,35 @@
 import unittest
+from pathlib import Path
 
-from app.web_app import WebSessionState, render_result, review_from_session_state
+from app.web_app import WebSessionState, render_page, render_result, review_from_session_state
 from medcombo.agent import answer_agent_question, start_intake_agent_session
 
 
 class WebAppWorkflowTest(unittest.TestCase):
+    def test_public_copy_uses_review_packet_positioning(self):
+        page = render_page(
+            medications_text="Tylenol",
+            supplements_text="",
+            demographics_text="",
+            body_info_text="",
+            conditions_text="",
+            symptoms_text="",
+            no_information=(),
+            source_type="manual",
+            error_message="",
+            result=None,
+        )
+        readme = Path("README.md").read_text(encoding="utf-8")
+        public_copy = f"{page}\n{readme}"
+
+        self.assertIn("pharmacist-ready review packet", public_copy)
+        self.assertIn("Build review packet", page)
+        self.assertNotIn("Consumer-first healthcare AI system", public_copy)
+        self.assertNotIn("medication-combination safety review", public_copy)
+        self.assertNotIn("Review list", page)
+        self.assertNotIn("all clear", public_copy.lower())
+        self.assertNotIn("safe combination", public_copy.lower())
+
     def test_render_result_includes_active_question_answer_form(self):
         agent_session = start_intake_agent_session(["metoprolol"], source_type="manual")
         state = WebSessionState(

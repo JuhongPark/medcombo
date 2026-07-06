@@ -2,15 +2,15 @@
 
 ## Overview
 
-MedCombo is a consumer-first healthcare AI system for medication-combination
-safety review. It is designed to help people understand their medication lists,
-identify review-worthy medication safety signals, and communicate more
-effectively with pharmacists and clinicians.
+MedCombo is a medication review preparation system for consumers and
+caregivers. It helps people organize medication lists, preserve uncertainty,
+surface limited source-linked review signals, and prepare a pharmacist-ready
+review packet.
 
 The primary user is the consumer: a person who may not know whether a product
 name is a brand, an active ingredient, a combination drug, an over-the-counter
 medicine, or a supplement. MedCombo should turn that messy real-world input into
-structured, source-linked safety intelligence.
+structured review material for pharmacists and clinicians.
 
 MedCombo is not positioned as an education-only prototype. It is a healthcare AI
 product concept in pre-market development. It is not yet clinically validated,
@@ -18,17 +18,16 @@ FDA-cleared, or intended to replace professional medical judgment.
 
 ## Product Thesis
 
-Medication safety problems often begin before a person reaches a clinic or
-pharmacy counter. People may combine prescriptions from multiple clinicians,
-over-the-counter products, cold medicines, supplements, and combination drugs
-without understanding duplicated ingredients, therapeutic overlap, or interaction
-signals.
+Medication review often begins with an incomplete or messy list. People may
+combine prescriptions from multiple clinicians, over-the-counter products, cold
+medicines, supplements, and combination drugs without knowing which names,
+ingredients, doses, or contexts need professional review.
 
 MedCombo starts from the idea that a healthcare AI system can help consumers
-organize medication information, understand safety signals in plain language, and
-prepare better questions for a pharmacist or clinician. The system should support
-safer review behavior without telling users to start, stop, combine, or change
-medications on their own.
+prepare better medication review conversations. The system should organize
+information, keep unknowns visible, explain limited review signals in plain
+language, and generate questions without telling users to start, stop, combine,
+or change medications on their own.
 
 ## Intended Users
 
@@ -47,18 +46,19 @@ EHR or FHIR integrations.
 
 ## Core Workflow
 
-The intended consumer workflow is:
+The intended review-preparation workflow is:
 
 1. Enter medications, supplements, or product names by typing, uploading a photo,
    scanning a label, or importing a list.
 2. Normalize names against reliable drug data when possible.
 3. Resolve active ingredients, combination products, and therapeutic classes.
-4. Detect review-worthy safety signals such as duplicate active ingredients,
-   possible drug-drug interactions, therapeutic class overlap, allergy-related
-   concerns, or context-sensitive warnings.
-5. Explain each signal in plain language with source references.
-6. Generate questions and a concise summary that the user can bring to a
-   pharmacist or clinician.
+4. Preserve unresolved product identities, low-confidence sources, and missing
+   dose, frequency, route, or formulation details.
+5. Surface limited review-worthy signals from the curated knowledge base, such
+   as duplicate active ingredients, possible drug-drug interactions, therapeutic
+   class overlap, allergy-related concerns, or context-sensitive warnings.
+6. Explain each signal in plain language with source references.
+7. Generate a pharmacist-ready packet with questions and source limitations.
 
 ## Safety Boundary
 
@@ -74,7 +74,7 @@ MedCombo should not:
 
 MedCombo should:
 
-- Surface review-worthy signals.
+- Surface review-worthy signals from eligible evidence records.
 - Explain why a signal appeared.
 - Show sources and data freshness where available.
 - Use cautious, consumer-readable language.
@@ -94,7 +94,7 @@ The first MVP should prioritize a narrow but serious healthcare AI workflow:
 - Therapeutic class overlap detection.
 - Consumer-readable explanation generation.
 - Pharmacist or clinician question generation.
-- Shareable medication review summary.
+- Shareable pharmacist-ready review packet.
 - Source, rule, and data-version traceability for every safety signal.
 
 AI should be used first for intake, structuring, language simplification, and
@@ -126,14 +126,14 @@ knowledge bases or expert-curated content.
 
 MedCombo should be designed as a healthcare AI system with a consumer UX:
 
-- Consumer interface for medication entry and review.
+- Consumer interface for medication entry and review preparation.
 - AI intake layer for OCR, natural language parsing, and product-name cleanup.
 - Medication normalization service.
 - Knowledge graph or structured knowledge layer for ingredients, classes,
   interactions, warnings, and source metadata.
-- Safety reasoning layer based on traceable rules and validated knowledge.
+- Review signal layer based on traceable rules and validated knowledge.
 - Explanation layer that translates signals into consumer-readable language.
-- Professional bridge for pharmacist or clinician summaries.
+- Professional bridge for pharmacist-ready review packets.
 - Privacy, security, audit, and data-governance layer.
 
 ## Regulatory And Privacy Posture
@@ -163,8 +163,8 @@ Near-term development should proceed in this order:
 3. Implement medication intake and normalization.
 4. Implement duplicate ingredient and therapeutic overlap checks.
 5. Add basic interaction signals with source-linked explanations.
-6. Build a consumer-facing review interface.
-7. Generate pharmacist or clinician question summaries.
+6. Build a consumer-facing review preparation interface.
+7. Generate pharmacist-ready question packets.
 8. Add tests for normalization, rules, explanations, and safety language.
 9. Add privacy, audit, and data-version tracking.
 10. Prepare validation and regulatory strategy documentation.
@@ -241,7 +241,7 @@ The first implementation includes:
   chronic conditions, and current symptoms.
 - A development-stage guided intake agent for deterministic follow-up questions.
 - Normalization benchmark fixtures in `data/benchmarks/`.
-- Consumer summary generation in `medcombo/summary.py`.
+- Pharmacist-ready summary generation in `medcombo/summary.py`.
 - Safety-language checks in `medcombo/safety_language.py`.
 - A dependency-free multi-turn web demo in `app/web_app.py`.
 - Unit tests and demo data integrity checks in `tests/`.
@@ -253,5 +253,5 @@ make the review workflow testable while the system architecture is developed.
 ## Current Status
 
 MedCombo is in the early MVP implementation stage. The current system can run a
-minimal consumer-facing medication review workflow backed by a curated, testable
-knowledge base and a traceable safety-rule engine.
+minimal medication review preparation workflow backed by a curated, testable
+knowledge base and a traceable review-rule engine.
